@@ -1,0 +1,130 @@
+:root {
+    --bg: #0f1117;
+    --card: #161b22;
+    --text: #e6edf3;
+    --muted: #9ca3af;
+    --accent: #5865F2;
+    --border: #2b313c;
+}
+
+.light {
+    --bg: #ffffff;
+    --card: #f3f4f6;
+    --text: #111827;
+    --muted: #4b5563;
+    --border: #e5e7eb;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+body {
+    background: var(--bg);
+    color: var(--text);
+    transition: 0.25s ease;
+    line-height: 1.7;
+}
+
+.container {
+    max-width: 1050px;
+    margin: auto;
+    padding: 40px 20px;
+}
+
+nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+nav a {
+    text-decoration: none;
+    color: var(--text);
+    margin-left: 25px;
+    font-weight: 500;
+}
+
+.toggle {
+    background: none;
+    border: 1px solid var(--border);
+    padding: 6px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    color: var(--text);
+}
+
+.hero {
+    text-align: center;
+    padding: 100px 20px 80px;
+}
+
+.hero h1 {
+    font-size: 3rem;
+    margin-bottom: 20px;
+}
+
+.hero p {
+    color: var(--muted);
+    max-width: 600px;
+    margin: auto;
+    margin-bottom: 30px;
+}
+
+.buttons a {
+    display: inline-block;
+    padding: 14px 26px;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 600;
+    margin: 8px;
+}
+
+.primary {
+    background: var(--accent);
+    color: white;
+}
+
+.secondary {
+    border: 1px solid var(--border);
+    color: var(--text);
+}
+
+.section {
+    margin-top: 80px;
+}
+
+.card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 35px;
+    border-radius: 14px;
+    margin-bottom: 30px;
+}
+
+h2 {
+    margin-bottom: 20px;
+    color: var(--accent);
+}
+
+h3 {
+    margin-top: 25px;
+    margin-bottom: 10px;
+}
+
+ul {
+    margin-left: 20px;
+    margin-top: 10px;
+}
+
+.footer {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--muted);
+    font-size: 0.9rem;
+    border-top: 1px solid var(--border);
+    margin-top: 80px;
+}
