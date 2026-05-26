@@ -11,3 +11,7 @@ toggle?.addEventListener("click", () => {
         document.body.classList.contains("light") ? "light" : "dark"
     );
 });
+
+window.addEventListener("load", () => {
+    document.body.classList.add("loaded");
+});
