@@ -128,3 +128,47 @@ ul {
     border-top: 1px solid var(--border);
     margin-top: 80px;
 }
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    opacity: 0;
+    transform: translateY(10px);
+    transition:
+        opacity 0.6s ease,
+        transform 0.6s ease,
+        background 0.25s ease,
+        color 0.25s ease;
+}
+
+body.loaded {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+a,
+button,
+.card,
+.toggle {
+    transition:
+        transform 0.25s ease,
+        background 0.25s ease,
+        border 0.25s ease,
+        color 0.25s ease,
+        box-shadow 0.25s ease;
+}
+
+.buttons a:hover,
+.toggle:hover {
+    transform: translateY(-3px);
+}
+
+.card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+}
+
+nav a:hover {
+    opacity: 0.7;
+}
