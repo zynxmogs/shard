@@ -1,362 +1,853 @@
-const nav = document.querySelector("nav");
-const navContainer = document.querySelector("nav > div");
-
-const navLinks = [
-    ...document.querySelectorAll("nav a")
-];
-
-const toggle =
-    document.querySelector(".toggle");
+(() => {
+    "use strict";
 
 
-/* ================================= */
-/* CURRENT PAGE */
-/* ================================= */
+    /* =========================================
+       ELEMENTS
+    ========================================= */
 
-function getCurrentPage() {
-    const page =
-        window.location.pathname
-            .split("/")
-            .pop()
-            .toLowerCase();
+    const nav =
+        document.querySelector("nav");
 
-    return page || "index.html";
-}
+    const navContainer =
+        document.querySelector("nav > div");
 
+    const navLinks = [
+        ...document.querySelectorAll(
+            "nav a"
+        )
+    ];
 
-/* ================================= */
-/* SLIDER POSITION */
-/* ================================= */
-
-function getPosition(element) {
-
-    const container =
-        navContainer.getBoundingClientRect();
-
-    const rect =
-        element.getBoundingClientRect();
-
-    return {
-        left:
-            rect.left -
-            container.left,
-
-        width:
-            rect.width
-    };
-}
+    const toggle =
+        document.querySelector(
+            "nav .toggle"
+        );
 
 
-function moveSlider(element) {
+    /* =========================================
+       THEME
+    ========================================= */
 
-    if (!element) return;
-
-    const position =
-        getPosition(element);
-
-    navContainer.style.setProperty(
-        "--slider-left",
-        `${position.left}px`
-    );
-
-    navContainer.style.setProperty(
-        "--slider-width",
-        `${position.width}px`
-    );
-}
+    const THEME_KEY =
+        "shard-theme";
 
 
-/* ================================= */
-/* INITIAL ACTIVE PAGE */
-/* ================================= */
+    function applyTheme(theme) {
 
-let activeLink =
-    navLinks.find(link => {
+        const isLight =
+            theme === "light";
 
-        const href =
-            link.getAttribute("href");
+        document.body.classList.toggle(
+            "light",
+            isLight
+        );
 
-        return href === getCurrentPage();
-
-    }) || navLinks[0];
-
-
-if (activeLink) {
-
-    activeLink.classList.add("active");
-
-    requestAnimationFrame(() => {
-        moveSlider(activeLink);
-    });
-}
-
-
-/* ================================= */
-/* DRAGGING */
-/* ================================= */
-
-let isDragging = false;
-let dragStartX = 0;
-let draggedDistance = 0;
-let dragTarget = null;
-
-
-function findClosestLink(x) {
-
-    let closest = null;
-    let closestDistance = Infinity;
-
-    navLinks.forEach(link => {
-
-        const rect =
-            link.getBoundingClientRect();
-
-        const center =
-            rect.left +
-            rect.width / 2;
-
-        const distance =
-            Math.abs(x - center);
-
-        if (distance < closestDistance) {
-
-            closestDistance =
-                distance;
-
-            closest = link;
+        if (toggle) {
+            toggle.textContent =
+                isLight
+                    ? "Dark"
+                    : "Theme";
         }
-    });
-
-    return closest;
-}
-
-
-/*
-    Make the slider follow the finger
-    with a small elastic stretch.
-*/
-
-function dragSlider(x) {
-
-    const target =
-        findClosestLink(x);
-
-    if (!target) return;
-
-    dragTarget = target;
-
-    const targetPosition =
-        getPosition(target);
-
-    const container =
-        navContainer.getBoundingClientRect();
-
-    const targetRect =
-        target.getBoundingClientRect();
-
-    const targetCenter =
-        targetRect.left +
-        targetRect.width / 2;
-
-    const difference =
-        x - targetCenter;
-
-    const stretch =
-        Math.min(
-            12,
-            Math.abs(difference) * .25
-        );
-
-    let width =
-        targetPosition.width +
-        stretch;
-
-    let left =
-        targetPosition.left -
-        stretch / 2;
-
-    const maxLeft =
-        container.width - width;
-
-    left =
-        Math.max(
-            0,
-            Math.min(left, maxLeft)
-        );
-
-    navContainer.style.setProperty(
-        "--slider-left",
-        `${left}px`
-    );
-
-    navContainer.style.setProperty(
-        "--slider-width",
-        `${width}px`
-    );
-
-    navLinks.forEach(link => {
-
-        link.classList.toggle(
-            "active",
-            link === target
-        );
-    });
-}
-
-
-/* ================================= */
-/* POINTER DOWN */
-/* ================================= */
-
-nav.addEventListener(
-    "pointerdown",
-    event => {
-
-        if (
-            event.pointerType === "mouse" &&
-            event.button !== 0
-        ) {
-            return;
-        }
-
-        isDragging = true;
-
-        dragStartX =
-            event.clientX;
-
-        draggedDistance = 0;
-        dragTarget = null;
-
-        nav.classList.add("dragging");
-
-        nav.setPointerCapture?.(
-            event.pointerId
-        );
-
-        dragSlider(
-            event.clientX
-        );
     }
-);
 
 
-/* ================================= */
-/* POINTER MOVE */
-/* ================================= */
+    function loadTheme() {
 
-nav.addEventListener(
-    "pointermove",
-    event => {
-
-        if (!isDragging) return;
-
-        draggedDistance =
-            Math.abs(
-                event.clientX -
-                dragStartX
+        const savedTheme =
+            localStorage.getItem(
+                THEME_KEY
             );
 
-        dragSlider(
-            event.clientX
+        applyTheme(
+            savedTheme === "light"
+                ? "light"
+                : "dark"
         );
     }
-);
 
 
-/* ================================= */
-/* POINTER UP */
-/* ================================= */
+    function toggleTheme() {
 
-nav.addEventListener(
-    "pointerup",
-    event => {
+        const isLight =
+            document.body.classList.contains(
+                "light"
+            );
 
-        if (!isDragging) return;
+        const newTheme =
+            isLight
+                ? "dark"
+                : "light";
 
-        isDragging = false;
-
-        nav.classList.remove(
-            "dragging"
+        localStorage.setItem(
+            THEME_KEY,
+            newTheme
         );
 
-        nav.releasePointerCapture?.(
-            event.pointerId
+        applyTheme(newTheme);
+    }
+
+
+    /*
+        Apply saved theme immediately.
+    */
+
+    loadTheme();
+
+
+    if (toggle) {
+
+        toggle.addEventListener(
+            "click",
+            event => {
+
+                event.preventDefault();
+                event.stopPropagation();
+
+                toggleTheme();
+            }
         );
+    }
 
-        if (!dragTarget) {
 
-            moveSlider(activeLink);
+    /* =========================================
+       PAGE DETECTION
+    ========================================= */
 
+    function getCurrentPage() {
+
+        let page =
+            window.location.pathname
+                .split("/")
+                .filter(Boolean)
+                .pop();
+
+        if (!page) {
+            return "index.html";
+        }
+
+        page =
+            page.toLowerCase();
+
+        /*
+            Treat the root page as index.html.
+        */
+
+        if (
+            page === "/" ||
+            page === ""
+        ) {
+            return "index.html";
+        }
+
+        return page;
+    }
+
+
+    /* =========================================
+       LINK MATCHING
+    ========================================= */
+
+    function normalizePage(href) {
+
+        if (!href) {
+            return "";
+        }
+
+        /*
+            Ignore external URLs.
+        */
+
+        if (
+            href.startsWith("http://") ||
+            href.startsWith("https://") ||
+            href.startsWith("//")
+        ) {
+            return href;
+        }
+
+        /*
+            Remove query strings / hashes.
+        */
+
+        href =
+            href
+                .split("?")[0]
+                .split("#")[0];
+
+        if (
+            href === "" ||
+            href === "/"
+        ) {
+            return "index.html";
+        }
+
+        return href
+            .split("/")
+            .filter(Boolean)
+            .pop()
+            .toLowerCase();
+    }
+
+
+    function findCurrentLink() {
+
+        const currentPage =
+            getCurrentPage();
+
+        return (
+            navLinks.find(link => {
+
+                const href =
+                    normalizePage(
+                        link.getAttribute(
+                            "href"
+                        )
+                    );
+
+                return href === currentPage;
+            })
+            || navLinks[0]
+        );
+    }
+
+
+    /* =========================================
+       SLIDER GEOMETRY
+    ========================================= */
+
+    let activeLink =
+        findCurrentLink();
+
+
+    function getSliderPosition(
+        element
+    ) {
+
+        if (
+            !element ||
+            !navContainer
+        ) {
+            return null;
+        }
+
+        const navRect =
+            navContainer.getBoundingClientRect();
+
+        const linkRect =
+            element.getBoundingClientRect();
+
+        return {
+            left:
+                linkRect.left -
+                navRect.left,
+
+            width:
+                linkRect.width
+        };
+    }
+
+
+    function setSlider(
+        element,
+        animate = true
+    ) {
+
+        if (!element) {
             return;
         }
 
-        activeLink = dragTarget;
+        const position =
+            getSliderPosition(
+                element
+            );
+
+        if (!position) {
+            return;
+        }
+
+        if (!animate) {
+
+            /*
+                Temporarily disable CSS transition.
+            */
+
+            navContainer.classList.add(
+                "slider-no-transition"
+            );
+        }
+
+        navContainer.style.setProperty(
+            "--slider-left",
+            `${position.left}px`
+        );
+
+        navContainer.style.setProperty(
+            "--slider-width",
+            `${position.width}px`
+        );
+
+        if (!animate) {
+
+            /*
+                Force layout before restoring
+                transitions.
+            */
+
+            navContainer.offsetWidth;
+
+            navContainer.classList.remove(
+                "slider-no-transition"
+            );
+        }
+    }
+
+
+    /*
+        CSS helper for instant placement.
+    */
+
+    const sliderStyle =
+        document.createElement("style");
+
+    sliderStyle.textContent = `
+        nav > div.slider-no-transition::before {
+            transition: none !important;
+        }
+    `;
+
+    document.head.appendChild(
+        sliderStyle
+    );
+
+
+    /* =========================================
+       ACTIVE LINK
+    ========================================= */
+
+    function setActiveLink(
+        link,
+        animate = true
+    ) {
+
+        if (!link) {
+            return;
+        }
+
+        navLinks.forEach(item => {
+
+            item.classList.toggle(
+                "active",
+                item === link
+            );
+        });
+
+        activeLink = link;
+
+        setSlider(
+            activeLink,
+            animate
+        );
+    }
+
+
+    /* =========================================
+       INITIAL POSITION
+    ========================================= */
+
+    function initializeSlider() {
+
+        const current =
+            findCurrentLink();
+
+        setActiveLink(
+            current,
+            false
+        );
+    }
+
+
+    /*
+        Do this after fonts and layout are ready.
+    */
+
+    if (
+        document.fonts &&
+        document.fonts.ready
+    ) {
+
+        document.fonts.ready.then(() => {
+
+            requestAnimationFrame(
+                initializeSlider
+            );
+        });
+
+    } else {
+
+        requestAnimationFrame(
+            initializeSlider
+        );
+    }
+
+
+    /* =========================================
+       DRAG STATE
+    ========================================= */
+
+    let isDragging = false;
+
+    let dragStartX = 0;
+
+    let draggedDistance = 0;
+
+    let dragTarget = null;
+
+    let dragPointerId = null;
+
+
+    /* =========================================
+       CLOSEST TAB
+    ========================================= */
+
+    function findClosestLink(x) {
+
+        let closest = null;
+        let closestDistance =
+            Infinity;
+
+        navLinks.forEach(link => {
+
+            const rect =
+                link.getBoundingClientRect();
+
+            const center =
+                rect.left +
+                rect.width / 2;
+
+            const distance =
+                Math.abs(
+                    x - center
+                );
+
+            if (
+                distance <
+                closestDistance
+            ) {
+                closestDistance =
+                    distance;
+
+                closest = link;
+            }
+        });
+
+        return closest;
+    }
+
+
+    /* =========================================
+       DRAG SLIDER
+    ========================================= */
+
+    function updateDrag(
+        pointerX
+    ) {
+
+        if (!navContainer) {
+            return;
+        }
+
+        const target =
+            findClosestLink(
+                pointerX
+            );
+
+        if (!target) {
+            return;
+        }
+
+        dragTarget = target;
+
+        const navRect =
+            navContainer.getBoundingClientRect();
+
+        const targetRect =
+            target.getBoundingClientRect();
+
+        const targetLeft =
+            targetRect.left -
+            navRect.left;
+
+        const targetWidth =
+            targetRect.width;
+
+        const targetCenter =
+            targetRect.left +
+            targetRect.width / 2;
+
+        /*
+            Distance of finger from
+            target center.
+        */
+
+        const difference =
+            pointerX -
+            targetCenter;
+
+        /*
+            Stretch based on distance.
+        */
+
+        const stretch =
+            Math.min(
+                14,
+                Math.abs(difference) * .22
+            );
+
+        let width =
+            targetWidth +
+            stretch;
+
+        let left =
+            targetLeft -
+            stretch / 2;
+
+        /*
+            Keep the pill inside the dock.
+        */
+
+        left =
+            Math.max(
+                0,
+                Math.min(
+                    left,
+                    navRect.width -
+                    width
+                )
+            );
+
+        navContainer.style.setProperty(
+            "--slider-left",
+            `${left}px`
+        );
+
+        navContainer.style.setProperty(
+            "--slider-width",
+            `${width}px`
+        );
+
+        /*
+            Text follows the finger too.
+        */
 
         navLinks.forEach(link => {
 
             link.classList.toggle(
                 "active",
-                link === activeLink
+                link === target
             );
         });
+    }
 
-        /*
-            Smoothly snap to the selected item.
-        */
 
-        moveSlider(activeLink);
+    /* =========================================
+       POINTER DOWN
+    ========================================= */
 
-        /*
-            iOS-like dock spring.
-        */
+    if (nav) {
 
-        nav.animate(
-            [
-                {
-                    transform:
-                        "translateX(-50%) scale(1)"
-                },
-                {
-                    transform:
-                        "translateX(-50%) scale(.985)"
-                },
-                {
-                    transform:
-                        "translateX(-50%) scale(1)"
+        nav.addEventListener(
+            "pointerdown",
+            event => {
+
+                /*
+                    Only use left mouse button.
+                */
+
+                if (
+                    event.pointerType ===
+                        "mouse" &&
+                    event.button !== 0
+                ) {
+                    return;
                 }
-            ],
-            {
-                duration: 260,
-                easing:
-                    "cubic-bezier(.22,1,.36,1)"
+
+                isDragging = true;
+
+                dragPointerId =
+                    event.pointerId;
+
+                dragStartX =
+                    event.clientX;
+
+                draggedDistance = 0;
+
+                dragTarget =
+                    findClosestLink(
+                        event.clientX
+                    );
+
+                nav.classList.add(
+                    "dragging"
+                );
+
+                nav.setPointerCapture?.(
+                    event.pointerId
+                );
+
+                updateDrag(
+                    event.clientX
+                );
             }
         );
 
 
-        /*
-            Navigate after the slider has
-            finished settling.
-        */
+        /* =====================================
+           POINTER MOVE
+        ===================================== */
 
-        if (
-            draggedDistance > 8
-        ) {
+        nav.addEventListener(
+            "pointermove",
+            event => {
 
-            const href =
-                activeLink.getAttribute(
-                    "href"
+                if (
+                    !isDragging ||
+                    event.pointerId !==
+                        dragPointerId
+                ) {
+                    return;
+                }
+
+                draggedDistance =
+                    Math.abs(
+                        event.clientX -
+                        dragStartX
+                    );
+
+                updateDrag(
+                    event.clientX
                 );
+            }
+        );
+
+
+        /* =====================================
+           POINTER END
+        ===================================== */
+
+        function finishDrag(event) {
 
             if (
-                href &&
-                !href.startsWith("#") &&
-                !href.startsWith("http") &&
-                href !== getCurrentPage()
+                !isDragging ||
+                event.pointerId !==
+                    dragPointerId
             ) {
+                return;
+            }
+
+            isDragging = false;
+
+            nav.classList.remove(
+                "dragging"
+            );
+
+            nav.releasePointerCapture?.(
+                event.pointerId
+            );
+
+            dragPointerId = null;
+
+
+            /*
+                Nothing useful selected.
+            */
+
+            if (!dragTarget) {
+
+                setSlider(
+                    activeLink,
+                    true
+                );
+
+                return;
+            }
+
+
+            const selected =
+                dragTarget;
+
+            activeLink =
+                selected;
+
+
+            navLinks.forEach(link => {
+
+                link.classList.toggle(
+                    "active",
+                    link === selected
+                );
+            });
+
+
+            /*
+                Snap the pill into its
+                exact position.
+            */
+
+            setSlider(
+                selected,
+                true
+            );
+
+
+            /*
+                Small spring effect on the dock.
+            */
+
+            nav.animate(
+                [
+                    {
+                        transform:
+                            "translateX(-50%) scale(1)"
+                    },
+                    {
+                        transform:
+                            "translateX(-50%) scale(.985)"
+                    },
+                    {
+                        transform:
+                            "translateX(-50%) scale(1)"
+                    }
+                ],
+                {
+                    duration: 260,
+                    easing:
+                        "cubic-bezier(.22,1,.36,1)"
+                }
+            );
+        }
+
+
+        nav.addEventListener(
+            "pointerup",
+            finishDrag
+        );
+
+        nav.addEventListener(
+            "pointercancel",
+            finishDrag
+        );
+    }
+
+
+    /* =========================================
+       NAVIGATION
+    ========================================= */
+
+    navLinks.forEach(link => {
+
+        link.addEventListener(
+            "click",
+            event => {
+
+                /*
+                    If user dragged, don't allow
+                    the browser's click event to
+                    navigate a second time.
+                */
+
+                if (
+                    draggedDistance > 8
+                ) {
+
+                    event.preventDefault();
+
+                    draggedDistance = 0;
+
+                    return;
+                }
+
+
+                const href =
+                    link.getAttribute(
+                        "href"
+                    );
+
+                if (!href) {
+                    return;
+                }
+
+
+                /*
+                    External links remain normal links.
+                */
+
+                if (
+                    href.startsWith(
+                        "http://"
+                    ) ||
+                    href.startsWith(
+                        "https://"
+                    ) ||
+                    href.startsWith("//") ||
+                    href.startsWith("#")
+                ) {
+                    return;
+                }
+
+
+                const destination =
+                    normalizePage(
+                        href
+                    );
+
+
+                /*
+                    Already on this page.
+                */
+
+                if (
+                    destination ===
+                    getCurrentPage()
+                ) {
+
+                    event.preventDefault();
+
+                    setActiveLink(
+                        link,
+                        true
+                    );
+
+                    return;
+                }
+
+
+                event.preventDefault();
+
+
+                /*
+                    Move the pill first.
+                */
+
+                setActiveLink(
+                    link,
+                    true
+                );
+
+
+                /*
+                    Then fade the page out.
+                */
 
                 document.body.classList.add(
                     "page-leaving"
                 );
+
+
+                /*
+                    The nav itself remains visible
+                    and completes its animation before
+                    navigation.
+                */
 
                 setTimeout(() => {
 
@@ -365,43 +856,44 @@ nav.addEventListener(
 
                 }, 430);
             }
-        }
-    }
-);
+        );
+    });
 
 
-/* ================================= */
-/* NORMAL CLICK NAVIGATION */
-/* ================================= */
+    /* =========================================
+       DRAG -> NAVIGATION
+    ========================================= */
 
-navLinks.forEach(link => {
+    /*
+        Navigation after a genuine drag.
+        Delay slightly so the snap animation
+        remains visible.
+    */
 
-    link.addEventListener(
-        "click",
-        event => {
-
-            /*
-                Don't run normal click navigation
-                after a drag.
-            */
+    nav?.addEventListener(
+        "pointerup",
+        () => {
 
             if (
-                draggedDistance > 8
+                !dragTarget ||
+                draggedDistance <= 8
             ) {
-
-                event.preventDefault();
-
-                draggedDistance = 0;
-
                 return;
             }
 
+            const target =
+                dragTarget;
+
             const href =
-                link.getAttribute(
+                target.getAttribute(
                     "href"
                 );
 
-            if (!href) return;
+            draggedDistance = 0;
+
+            if (!href) {
+                return;
+            }
 
             if (
                 href.startsWith("http") ||
@@ -411,34 +903,11 @@ navLinks.forEach(link => {
             }
 
             if (
-                href === getCurrentPage()
+                normalizePage(href) ===
+                getCurrentPage()
             ) {
-
-                event.preventDefault();
-
                 return;
             }
-
-            event.preventDefault();
-
-            navLinks.forEach(item => {
-                item.classList.remove(
-                    "active"
-                );
-            });
-
-            link.classList.add(
-                "active"
-            );
-
-            activeLink = link;
-
-            moveSlider(link);
-
-            /*
-                The bar stays exactly the same.
-                Only the active pill moves.
-            */
 
             document.body.classList.add(
                 "page-leaving"
@@ -452,277 +921,279 @@ navLinks.forEach(link => {
             }, 430);
         }
     );
-});
 
 
-/* ================================= */
-/* THEME */
-/* ================================= */
+    /* =========================================
+       RESIZE
+    ========================================= */
 
-if (toggle) {
+    let resizeTimer = null;
 
-    toggle.addEventListener(
-        "click",
-        event => {
+    window.addEventListener(
+        "resize",
+        () => {
 
-            event.preventDefault();
-
-            document.body.classList.toggle(
-                "light"
+            clearTimeout(
+                resizeTimer
             );
 
-            toggle.textContent =
-                document.body.classList.contains(
-                    "light"
-                )
-                    ? "Dark"
-                    : "Theme";
+            resizeTimer =
+                setTimeout(() => {
+
+                    const current =
+                        findCurrentLink();
+
+                    setActiveLink(
+                        current,
+                        false
+                    );
+
+                }, 80);
         }
     );
-}
 
 
-/* ================================= */
-/* SCROLL REVEAL */
-/* ================================= */
+    /* =========================================
+       PAGE SHOW
+    ========================================= */
 
-const revealElements =
-    document.querySelectorAll(
-        ".card, .footer"
-    );
+    window.addEventListener(
+        "pageshow",
+        () => {
 
-const observer =
-    new IntersectionObserver(
-        entries => {
+            document.body.classList.remove(
+                "page-leaving"
+            );
 
-            entries.forEach(entry => {
+            loadTheme();
 
-                if (
-                    !entry.isIntersecting
-                ) {
-                    return;
-                }
+            const current =
+                findCurrentLink();
 
-                entry.target.classList.add(
-                    "visible"
-                );
+            setActiveLink(
+                current,
+                false
+            );
 
-                observer.unobserve(
-                    entry.target
-                );
+            /*
+                One more alignment after the
+                browser has finished painting.
+            */
+
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+
+                    setSlider(
+                        current,
+                        false
+                    );
+
+                });
             });
-        },
-        {
-            threshold: .12,
-            rootMargin:
-                "0px 0px -60px 0px"
         }
     );
 
 
-revealElements.forEach(element => {
-    observer.observe(element);
-});
+    /* =========================================
+       SCROLL REVEAL
+    ========================================= */
+
+    const revealElements =
+        document.querySelectorAll(
+            ".card, .footer"
+        );
 
 
-/* ================================= */
-/* BUTTON RIPPLE */
-/* ================================= */
+    const observer =
+        new IntersectionObserver(
+            entries => {
 
-document
-    .querySelectorAll(".buttons a")
-    .forEach(button => {
+                entries.forEach(
+                    entry => {
 
-        button.addEventListener(
-            "pointerdown",
-            event => {
-
-                const rect =
-                    button.getBoundingClientRect();
-
-                const size =
-                    Math.max(
-                        rect.width,
-                        rect.height
-                    );
-
-                const ripple =
-                    document.createElement(
-                        "span"
-                    );
-
-                ripple.style.position =
-                    "absolute";
-
-                ripple.style.width =
-                    `${size}px`;
-
-                ripple.style.height =
-                    `${size}px`;
-
-                ripple.style.left =
-                    `${
-                        event.clientX -
-                        rect.left -
-                        size / 2
-                    }px`;
-
-                ripple.style.top =
-                    `${
-                        event.clientY -
-                        rect.top -
-                        size / 2
-                    }px`;
-
-                ripple.style.borderRadius =
-                    "50%";
-
-                ripple.style.background =
-                    "rgba(255,255,255,.3)";
-
-                ripple.style.pointerEvents =
-                    "none";
-
-                button.appendChild(
-                    ripple
-                );
-
-                ripple.animate(
-                    [
-                        {
-                            transform:
-                                "scale(0)",
-                            opacity: .8
-                        },
-                        {
-                            transform:
-                                "scale(2)",
-                            opacity: 0
+                        if (
+                            !entry.isIntersecting
+                        ) {
+                            return;
                         }
-                    ],
-                    {
-                        duration: 650,
-                        easing:
-                            "cubic-bezier(.22,1,.36,1)"
+
+                        entry.target.classList.add(
+                            "visible"
+                        );
+
+                        observer.unobserve(
+                            entry.target
+                        );
                     }
                 );
-
-                setTimeout(
-                    () => ripple.remove(),
-                    700
-                );
+            },
+            {
+                threshold: .12,
+                rootMargin:
+                    "0px 0px -60px 0px"
             }
         );
-    });
 
 
-/* ================================= */
-/* BACKGROUND PARALLAX */
-/* ================================= */
-
-let mouseX = 0;
-let mouseY = 0;
-
-let currentX = 0;
-let currentY = 0;
-
-
-window.addEventListener(
-    "pointermove",
-    event => {
-
-        if (
-            event.pointerType === "touch"
-        ) {
-            return;
+    revealElements.forEach(
+        element => {
+            observer.observe(
+                element
+            );
         }
-
-        mouseX =
-            (
-                event.clientX /
-                window.innerWidth -
-                .5
-            ) * 2;
-
-        mouseY =
-            (
-                event.clientY /
-                window.innerHeight -
-                .5
-            ) * 2;
-    }
-);
-
-
-function animateBackground() {
-
-    currentX +=
-        (mouseX - currentX) * .025;
-
-    currentY +=
-        (mouseY - currentY) * .025;
-
-    document.body.style.backgroundPosition =
-        `${currentX * 8}px ${currentY * 8}px`;
-
-    requestAnimationFrame(
-        animateBackground
     );
-}
-
-animateBackground();
 
 
-/* ================================= */
-/* RESIZE */
-/* ================================= */
+    /* =========================================
+       BUTTON RIPPLE
+    ========================================= */
 
-window.addEventListener(
-    "resize",
-    () => {
+    document
+        .querySelectorAll(
+            ".buttons a"
+        )
+        .forEach(button => {
 
-        if (!activeLink) return;
+            button.addEventListener(
+                "pointerdown",
+                event => {
 
-        requestAnimationFrame(() => {
-            moveSlider(activeLink);
+                    const rect =
+                        button.getBoundingClientRect();
+
+                    const size =
+                        Math.max(
+                            rect.width,
+                            rect.height
+                        );
+
+                    const ripple =
+                        document.createElement(
+                            "span"
+                        );
+
+                    ripple.style.position =
+                        "absolute";
+
+                    ripple.style.width =
+                        `${size}px`;
+
+                    ripple.style.height =
+                        `${size}px`;
+
+                    ripple.style.left =
+                        `${
+                            event.clientX -
+                            rect.left -
+                            size / 2
+                        }px`;
+
+                    ripple.style.top =
+                        `${
+                            event.clientY -
+                            rect.top -
+                            size / 2
+                        }px`;
+
+                    ripple.style.borderRadius =
+                        "50%";
+
+                    ripple.style.background =
+                        "rgba(255,255,255,.3)";
+
+                    ripple.style.pointerEvents =
+                        "none";
+
+                    button.appendChild(
+                        ripple
+                    );
+
+                    ripple.animate(
+                        [
+                            {
+                                transform:
+                                    "scale(0)",
+                                opacity: .8
+                            },
+                            {
+                                transform:
+                                    "scale(2)",
+                                opacity: 0
+                            }
+                        ],
+                        {
+                            duration: 650,
+                            easing:
+                                "cubic-bezier(.22,1,.36,1)"
+                        }
+                    );
+
+                    setTimeout(
+                        () => {
+                            ripple.remove();
+                        },
+                        700
+                    );
+                }
+            );
         });
-    }
-);
 
 
-/* ================================= */
-/* PAGE SHOW */
-/* ================================= */
+    /* =========================================
+       BACKGROUND PARALLAX
+    ========================================= */
 
-window.addEventListener(
-    "pageshow",
-    () => {
+    let mouseX = 0;
+    let mouseY = 0;
 
-        document.body.classList.remove(
-            "page-leaving"
+    let currentX = 0;
+    let currentY = 0;
+
+
+    window.addEventListener(
+        "pointermove",
+        event => {
+
+            if (
+                event.pointerType ===
+                "touch"
+            ) {
+                return;
+            }
+
+            mouseX =
+                (
+                    event.clientX /
+                    window.innerWidth -
+                    .5
+                ) * 2;
+
+            mouseY =
+                (
+                    event.clientY /
+                    window.innerHeight -
+                    .5
+                ) * 2;
+        }
+    );
+
+
+    function animateBackground() {
+
+        currentX +=
+            (mouseX - currentX) * .025;
+
+        currentY +=
+            (mouseY - currentY) * .025;
+
+        document.body.style.backgroundPosition =
+            `${currentX * 8}px ${currentY * 8}px`;
+
+        requestAnimationFrame(
+            animateBackground
         );
-
-        const current =
-            navLinks.find(
-                link =>
-                    link.getAttribute("href") ===
-                    getCurrentPage()
-            );
-
-        if (!current) return;
-
-        navLinks.forEach(link => {
-
-            link.classList.toggle(
-                "active",
-                link === current
-            );
-        });
-
-        activeLink = current;
-
-        requestAnimationFrame(() => {
-            moveSlider(current);
-        });
     }
-);
+
+    animateBackground();
+
+})();
