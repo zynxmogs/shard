@@ -1,37 +1,38 @@
 const nav = document.querySelector("nav");
 const navContainer = document.querySelector("nav > div");
-
-const navLinks = [
-    ...document.querySelectorAll("nav a")
-];
-
+const navLinks = [...document.querySelectorAll("nav a")];
 const toggle = document.querySelector(".toggle");
 
 
 /* ================================= */
-/* IOS-STYLE SLIDER */
+/* FIND CURRENT PAGE */
 /* ================================= */
 
-let activeLink =
-    document.querySelector("nav a.active") ||
-    navLinks[0];
+function getCurrentPage() {
+    const page =
+        window.location.pathname
+            .split("/")
+            .pop()
+            .toLowerCase();
 
-let pointerDown = false;
-let dragged = false;
-let startX = 0;
+    if (!page || page === "index.html") {
+        return "index.html";
+    }
+
+    return page;
+}
 
 
-/*
-    Get the position of a link relative
-    to the navigation container.
-*/
+/* ================================= */
+/* SLIDER POSITION */
+/* ================================= */
 
-function getLinkPosition(link) {
+function getPosition(element) {
     const container =
         navContainer.getBoundingClientRect();
 
     const rect =
-        link.getBoundingClientRect();
+        element.getBoundingClientRect();
 
     return {
         left: rect.left - container.left,
@@ -40,19 +41,10 @@ function getLinkPosition(link) {
 }
 
 
-/*
-    Move the glass pill.
-*/
+function moveSlider(element, animated = true) {
+    if (!element) return;
 
-function moveSlider(
-    link,
-    animate = true,
-    stretch = false
-) {
-    if (!link) return;
-
-    const position =
-        getLinkPosition(link);
+    const position = getPosition(element);
 
     navContainer.style.setProperty(
         "--slider-left",
@@ -64,41 +56,33 @@ function moveSlider(
         `${position.width}px`
     );
 
-    if (!animate) {
+    if (!animated) {
         navContainer.style.setProperty(
             "--slider-duration",
             "0s"
         );
     }
-
-    if (stretch) {
-        nav.classList.add("dragging");
-    } else {
-        nav.classList.remove("dragging");
-    }
 }
 
 
-/*
-    Set active tab.
-*/
+/* ================================= */
+/* INITIAL ACTIVE TAB */
+/* ================================= */
 
-function setActive(link) {
-    navLinks.forEach(item => {
-        item.classList.remove("active");
-    });
+let activeLink =
+    navLinks.find(link => {
 
-    link.classList.add("active");
+        const href =
+            link.getAttribute("href");
 
-    activeLink = link;
+        return href === getCurrentPage();
 
-    moveSlider(link);
-}
+    }) || navLinks[0];
 
-
-/* Initial position */
 
 if (activeLink) {
+    activeLink.classList.add("active");
+
     requestAnimationFrame(() => {
         moveSlider(activeLink, false);
     });
@@ -106,157 +90,375 @@ if (activeLink) {
 
 
 /* ================================= */
-/* POINTER / TOUCH INTERACTION */
+/* DRAGGING */
 /* ================================= */
 
-navLinks.forEach(link => {
+let isDragging = false;
+let dragStartX = 0;
+let currentDragX = 0;
+let draggedDistance = 0;
+let dragTarget = null;
 
-    link.addEventListener(
-        "pointerdown",
-        event => {
 
-            pointerDown = true;
-            dragged = false;
+function findClosestLink(x) {
 
-            startX = event.clientX;
+    let closest = null;
+    let closestDistance = Infinity;
 
-            link.setPointerCapture?.(
-                event.pointerId
-            );
+    navLinks.forEach(link => {
 
-            nav.classList.add("dragging");
+        const rect =
+            link.getBoundingClientRect();
 
-            /*
-                Immediately move the pill toward
-                the touched item.
-            */
+        const center =
+            rect.left + rect.width / 2;
 
-            moveSlider(link, true, true);
+        const distance =
+            Math.abs(x - center);
 
-            navLinks.forEach(item => {
-                item.classList.remove("active");
-            });
-
-            link.classList.add("active");
+        if (distance < closestDistance) {
+            closestDistance = distance;
+            closest = link;
         }
+    });
+
+    return closest;
+}
+
+
+/*
+    Move the pill toward the finger.
+
+    Instead of jumping directly to another
+    link, interpolate its position so it
+    stretches/squishes naturally.
+*/
+
+function dragSlider(x) {
+
+    const target =
+        findClosestLink(x);
+
+    if (!target) return;
+
+    dragTarget = target;
+
+    const targetPosition =
+        getPosition(target);
+
+    const container =
+        navContainer.getBoundingClientRect();
+
+    const targetRect =
+        target.getBoundingClientRect();
+
+    /*
+        Calculate how far the finger is from
+        the target center.
+    */
+
+    const targetCenter =
+        targetRect.left +
+        targetRect.width / 2;
+
+    const difference =
+        x - targetCenter;
+
+    /*
+        Small elastic stretch while dragging.
+    */
+
+    const stretch =
+        Math.min(
+            12,
+            Math.abs(difference) * .25
+        );
+
+    let width =
+        targetPosition.width + stretch;
+
+    let left =
+        targetPosition.left -
+        stretch / 2;
+
+    /*
+        Keep the pill inside the navigation.
+    */
+
+    const maxLeft =
+        container.width - width;
+
+    left =
+        Math.max(
+            0,
+            Math.min(left, maxLeft)
+        );
+
+    navContainer.style.setProperty(
+        "--slider-left",
+        `${left}px`
     );
 
-
-    link.addEventListener(
-        "pointermove",
-        event => {
-
-            if (!pointerDown) return;
-
-            if (
-                Math.abs(event.clientX - startX) > 6
-            ) {
-                dragged = true;
-            }
-        }
+    navContainer.style.setProperty(
+        "--slider-width",
+        `${width}px`
     );
 
+    /*
+        Update text state while dragging.
+    */
 
-    link.addEventListener(
-        "pointerup",
-        event => {
-
-            if (!pointerDown) return;
-
-            pointerDown = false;
-
-            nav.classList.remove("dragging");
-
-            activeLink = link;
-
-            moveSlider(link, true, false);
-
-            /*
-                Give the pill a tiny spring-like
-                settling effect.
-            */
-
-            link.animate(
-                [
-                    {
-                        transform: "scale(.96)"
-                    },
-                    {
-                        transform: "scale(1.04)"
-                    },
-                    {
-                        transform: "scale(1)"
-                    }
-                ],
-                {
-                    duration: 300,
-                    easing: "cubic-bezier(.22,1,.36,1)"
-                }
-            );
-        }
-    );
-});
+    navLinks.forEach(link => {
+        link.classList.toggle(
+            "active",
+            link === target
+        );
+    });
+}
 
 
 /* ================================= */
-/* NAVIGATION TRANSITION */
+/* POINTER DOWN */
 /* ================================= */
 
-navLinks.forEach(link => {
-
-    link.addEventListener("click", event => {
-
-        const href =
-            link.getAttribute("href");
-
-        if (!href) return;
+nav.addEventListener(
+    "pointerdown",
+    event => {
 
         /*
-            Let external links behave normally.
+            Ignore secondary mouse buttons.
         */
 
         if (
-            href.startsWith("http") ||
-            href.startsWith("#") ||
-            href.startsWith("mailto:")
+            event.pointerType === "mouse" &&
+            event.button !== 0
         ) {
             return;
         }
 
+        isDragging = true;
+
+        dragStartX = event.clientX;
+        currentDragX = event.clientX;
+
+        draggedDistance = 0;
+        dragTarget = null;
+
+        nav.classList.add("dragging");
+
+        nav.setPointerCapture?.(
+            event.pointerId
+        );
+
         /*
-            Don't navigate if this was a drag.
+            Move immediately toward the touched
+            part of the bar.
         */
 
-        if (dragged) {
-            event.preventDefault();
-            dragged = false;
+        dragSlider(event.clientX);
+    }
+);
+
+
+/* ================================= */
+/* POINTER MOVE */
+/* ================================= */
+
+nav.addEventListener(
+    "pointermove",
+    event => {
+
+        if (!isDragging) return;
+
+        currentDragX = event.clientX;
+
+        draggedDistance =
+            Math.abs(
+                currentDragX -
+                dragStartX
+            );
+
+        dragSlider(currentDragX);
+    }
+);
+
+
+/* ================================= */
+/* POINTER UP */
+/* ================================= */
+
+nav.addEventListener(
+    "pointerup",
+    event => {
+
+        if (!isDragging) return;
+
+        isDragging = false;
+
+        nav.classList.remove("dragging");
+
+        nav.releasePointerCapture?.(
+            event.pointerId
+        );
+
+        if (!dragTarget) {
+            moveSlider(activeLink);
             return;
         }
 
-        event.preventDefault();
+        const target = dragTarget;
 
-        setActive(link);
+        navLinks.forEach(link => {
+            link.classList.remove("active");
+        });
+
+        target.classList.add("active");
+
+        activeLink = target;
 
         /*
-            The important fix:
-            the slider gets time to complete
-            its movement before the document
-            changes.
+            Snap smoothly into place.
         */
 
-        document.body.classList.add(
-            "page-leaving"
+        moveSlider(target);
+
+
+        /*
+            Small iOS-like spring.
+        */
+
+        nav.animate(
+            [
+                {
+                    transform:
+                        "translateX(-50%) scale(1)"
+                },
+                {
+                    transform:
+                        "translateX(-50%) scale(.985)"
+                },
+                {
+                    transform:
+                        "translateX(-50%) scale(1)"
+                }
+            ],
+            {
+                duration: 260,
+                easing:
+                    "cubic-bezier(.22,1,.36,1)"
+            }
         );
 
-        setTimeout(() => {
-            window.location.href = href;
-        }, 430);
-    });
+
+        /*
+            Navigate only when the user actually
+            dragged to another page.
+        */
+
+        if (
+            draggedDistance > 8
+        ) {
+
+            const href =
+                target.getAttribute("href");
+
+            if (
+                href &&
+                !href.startsWith("#") &&
+                !href.startsWith("http") &&
+                href !== getCurrentPage()
+            ) {
+
+                document.body.classList.add(
+                    "page-leaving"
+                );
+
+                setTimeout(() => {
+                    window.location.href =
+                        href;
+                }, 430);
+            }
+        }
+    }
+);
+
+
+/* ================================= */
+/* NORMAL CLICK NAVIGATION */
+/* ================================= */
+
+navLinks.forEach(link => {
+
+    link.addEventListener(
+        "click",
+        event => {
+
+            /*
+                Drag navigation handles its own
+                navigation.
+            */
+
+            if (
+                draggedDistance > 8
+            ) {
+                event.preventDefault();
+                return;
+            }
+
+            const href =
+                link.getAttribute("href");
+
+            if (!href) return;
+
+            if (
+                href.startsWith("http") ||
+                href.startsWith("#")
+            ) {
+                return;
+            }
+
+            if (
+                href === getCurrentPage()
+            ) {
+                event.preventDefault();
+                return;
+            }
+
+            event.preventDefault();
+
+            navLinks.forEach(item => {
+                item.classList.remove(
+                    "active"
+                );
+            });
+
+            link.classList.add("active");
+
+            activeLink = link;
+
+            moveSlider(link);
+
+            document.body.classList.add(
+                "page-leaving"
+            );
+
+            /*
+                The bar remains completely identical
+                during the transition. Only the pill
+                moves.
+            */
+
+            setTimeout(() => {
+                window.location.href =
+                    href;
+            }, 430);
+        }
+    );
 });
 
 
 /* ================================= */
-/* THEME BUTTON */
+/* THEME */
 /* ================================= */
 
 if (toggle) {
@@ -297,8 +499,11 @@ const observer =
 
             entries.forEach(entry => {
 
-                if (!entry.isIntersecting)
+                if (
+                    !entry.isIntersecting
+                ) {
                     return;
+                }
 
                 entry.target.classList.add(
                     "visible"
@@ -412,7 +617,7 @@ document
 
 
 /* ================================= */
-/* BACKGROUND MOUSE PARALLAX */
+/* BACKGROUND PARALLAX */
 /* ================================= */
 
 let mouseX = 0;
@@ -424,6 +629,10 @@ let currentY = 0;
 window.addEventListener(
     "pointermove",
     event => {
+
+        if (event.pointerType === "touch") {
+            return;
+        }
 
         mouseX =
             (event.clientX /
@@ -458,7 +667,7 @@ animateBackground();
 
 
 /* ================================= */
-/* REALIGN SLIDER */
+/* RESIZE */
 /* ================================= */
 
 window.addEventListener(
@@ -467,16 +676,18 @@ window.addEventListener(
 
         if (!activeLink) return;
 
-        moveSlider(
-            activeLink,
-            false
-        );
+        requestAnimationFrame(() => {
+            moveSlider(
+                activeLink,
+                false
+            );
+        });
     }
 );
 
 
 /* ================================= */
-/* PAGE ENTER ANIMATION */
+/* PAGE ENTER */
 /* ================================= */
 
 window.addEventListener(
@@ -487,10 +698,30 @@ window.addEventListener(
             "page-leaving"
         );
 
-        if (activeLink) {
+        const current =
+            navLinks.find(
+                link =>
+                    link.getAttribute("href") ===
+                    getCurrentPage()
+            );
+
+        if (current) {
+
+            navLinks.forEach(link => {
+                link.classList.remove(
+                    "active"
+                );
+            });
+
+            current.classList.add(
+                "active"
+            );
+
+            activeLink = current;
+
             requestAnimationFrame(() => {
                 moveSlider(
-                    activeLink,
+                    current,
                     false
                 );
             });
