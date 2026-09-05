@@ -1,84 +1,13 @@
 (() => {
     "use strict";
 
-
-    /* =========================================
-       SVG LIQUID DISTORTION
-    ========================================= */
-
-    const distortion =
-        document.createElementNS(
-            "http://www.w3.org/2000/svg",
-            "svg"
-        );
-
-    distortion.setAttribute(
-        "width",
-        "0"
-    );
-
-    distortion.setAttribute(
-        "height",
-        "0"
-    );
-
-    distortion.style.position =
-        "absolute";
-
-    distortion.style.pointerEvents =
-        "none";
-
-    distortion.innerHTML = `
-        <defs>
-            <filter
-                id="shard-liquid"
-                x="-20%"
-                y="-30%"
-                width="140%"
-                height="160%"
-                color-interpolation-filters="sRGB"
-            >
-                <feTurbulence
-                    type="fractalNoise"
-                    baseFrequency=".018 .028"
-                    numOctaves="2"
-                    seed="7"
-                    result="noise"
-                />
-
-                <feDisplacementMap
-                    in="SourceGraphic"
-                    in2="noise"
-                    scale="6"
-                    xChannelSelector="R"
-                    yChannelSelector="G"
-                />
-
-                <feGaussianBlur
-                    stdDeviation=".08"
-                />
-            </filter>
-        </defs>
-    `;
-
-    document.body.appendChild(
-        distortion
-    );
-
-
-    /* =========================================
-       ELEMENTS
-    ========================================= */
-
-    const nav =
-        document.querySelector(
-            "nav"
-        );
+    const THEME_KEY = "shard-theme";
 
     const navPages =
-        document.querySelector(
-            ".nav-pages"
-        );
+        document.querySelector(".nav-pages");
+
+    const navIndicator =
+        document.querySelector(".nav-indicator");
 
     const navLinks = [
         ...document.querySelectorAll(
@@ -96,24 +25,20 @@
        THEME
     ========================================= */
 
-    const THEME_KEY =
-        "shard-theme";
-
-
     function getTheme() {
 
         try {
 
-            const stored =
+            const saved =
                 localStorage.getItem(
                     THEME_KEY
                 );
 
             if (
-                stored === "light" ||
-                stored === "dark"
+                saved === "light" ||
+                saved === "dark"
             ) {
-                return stored;
+                return saved;
             }
 
         } catch {}
@@ -122,9 +47,7 @@
     }
 
 
-    function applyTheme(
-        theme
-    ) {
+    function applyTheme(theme) {
 
         document.body.classList.toggle(
             "light",
@@ -138,9 +61,7 @@
     );
 
 
-    async function changeTheme(
-        event
-    ) {
+    function switchTheme(event) {
 
         const current =
             document.body.classList.contains(
@@ -156,12 +77,10 @@
 
 
         try {
-
             localStorage.setItem(
                 THEME_KEY,
                 next
             );
-
         } catch {}
 
 
@@ -172,20 +91,6 @@
         const y =
             event?.clientY ??
             window.innerHeight / 2;
-
-
-        if (themeButton) {
-
-            themeButton.classList.remove(
-                "switching"
-            );
-
-            void themeButton.offsetWidth;
-
-            themeButton.classList.add(
-                "switching"
-            );
-        }
 
 
         const overlay =
@@ -217,6 +122,36 @@
         );
 
 
+        if (themeButton) {
+
+            themeButton.animate(
+                [
+                    {
+                        transform:
+                            "scale(1) rotate(0deg)"
+                    },
+                    {
+                        transform:
+                            "scale(.8) rotate(-12deg)"
+                    },
+                    {
+                        transform:
+                            "scale(1.06) rotate(12deg)"
+                    },
+                    {
+                        transform:
+                            "scale(1) rotate(0deg)"
+                    }
+                ],
+                {
+                    duration: 560,
+                    easing:
+                        "cubic-bezier(.16,1.28,.34,1)"
+                }
+            );
+        }
+
+
         requestAnimationFrame(() => {
 
             requestAnimationFrame(() => {
@@ -229,14 +164,11 @@
         });
 
 
-        /*
-            Change the page underneath the
-            expanding transition.
-        */
-
         setTimeout(() => {
 
-            applyTheme(next);
+            applyTheme(
+                next
+            );
 
         }, 250);
 
@@ -258,7 +190,7 @@
                 event.preventDefault();
                 event.stopPropagation();
 
-                changeTheme(
+                switchTheme(
                     event
                 );
             }
@@ -313,8 +245,12 @@
             href.startsWith(
                 "https://"
             ) ||
-            href.startsWith("//") ||
-            href.startsWith("#")
+            href.startsWith(
+                "//"
+            ) ||
+            href.startsWith(
+                "#"
+            )
         ) {
             return href;
         }
@@ -361,58 +297,83 @@
 
 
     /* =========================================
-       SLIDER
+       IOS SPRING SLIDER
     ========================================= */
 
     let activeLink =
         getCurrentLink();
 
-
-    function getLinkIndex(
-        link
-    ) {
-
-        return navLinks.indexOf(
-            link
+    let activeIndex =
+        Math.max(
+            0,
+            navLinks.indexOf(
+                activeLink
+            )
         );
-    }
 
 
-    function setSliderIndex(
+    function setIndex(
         index,
-        immediate = false
+        spring = true
     ) {
 
-        if (!navPages) {
+        if (
+            !navPages ||
+            !navIndicator
+        ) {
             return;
         }
 
-        if (immediate) {
 
-            navPages.classList.add(
-                "slider-static"
+        activeIndex =
+            Math.max(
+                0,
+                Math.min(
+                    index,
+                    navLinks.length - 1
+                )
             );
-        }
+
 
         navPages.style.setProperty(
-            "--slider-index",
-            index
+            "--nav-index",
+            activeIndex
         );
 
-        if (immediate) {
+        navPages.style.setProperty(
+            "--drag-offset",
+            "0px"
+        );
 
-            navPages.offsetWidth;
+        navPages.style.setProperty(
+            "--indicator-scale-x",
+            "1"
+        );
 
-            navPages.classList.remove(
-                "slider-static"
-            );
+        navPages.style.setProperty(
+            "--indicator-scale-y",
+            "1"
+        );
+
+
+        if (!spring) {
+            navIndicator.style.transition =
+                "none";
+
+            navIndicator.offsetWidth;
+
+            requestAnimationFrame(() => {
+
+                navIndicator.style.transition =
+                    "";
+            });
         }
     }
 
 
     function setActive(
         link,
-        animated = true
+        spring = true
     ) {
 
         if (!link) {
@@ -432,62 +393,23 @@
         activeLink =
             link;
 
-        const index =
-            getLinkIndex(
+        setIndex(
+            navLinks.indexOf(
                 link
-            );
-
-        if (index >= 0) {
-
-            setSliderIndex(
-                index,
-                !animated
-            );
-        }
-    }
-
-
-    function initializeSlider() {
-
-        const current =
-            getCurrentLink();
-
-        setActive(
-            current,
-            false
+            ),
+            spring
         );
     }
 
 
-    if (
-        document.fonts &&
-        document.fonts.ready
-    ) {
-
-        document.fonts.ready.then(
-            () => {
-
-                requestAnimationFrame(
-                    initializeSlider
-                );
-
-            }
-        );
-
-    } else {
-
-        window.addEventListener(
-            "load",
-            initializeSlider,
-            {
-                once: true
-            }
-        );
-    }
+    setActive(
+        activeLink,
+        false
+    );
 
 
     /* =========================================
-       LIQUID DRAG
+       DRAGGING
     ========================================= */
 
     let dragging =
@@ -503,68 +425,10 @@
         false;
 
     let dragIndex =
-        -1;
+        activeIndex;
 
 
-    function getPageIndexFromX(
-        x
-    ) {
-
-        if (!navPages) {
-            return 0;
-        }
-
-        const rect =
-            navPages.getBoundingClientRect();
-
-        const padding =
-            5;
-
-        const usableWidth =
-            rect.width -
-            padding * 2;
-
-        const cellWidth =
-            usableWidth /
-            navLinks.length;
-
-        let relative =
-            x -
-            rect.left -
-            padding;
-
-        relative =
-            Math.max(
-                0,
-                Math.min(
-                    relative,
-                    usableWidth -
-                    0.01
-                )
-            );
-
-        let index =
-            Math.floor(
-                relative /
-                cellWidth
-            );
-
-        index =
-            Math.max(
-                0,
-                Math.min(
-                    index,
-                    navLinks.length - 1
-                )
-            );
-
-        return index;
-    }
-
-
-    function getCellRect(
-        index
-    ) {
+    function getNavBounds() {
 
         if (!navPages) {
             return null;
@@ -574,144 +438,169 @@
             navPages.getBoundingClientRect();
 
         const padding =
-            5;
+            window.innerWidth <= 600
+                ? 4
+                : 5;
 
-        const usableWidth =
+        const width =
             rect.width -
             padding * 2;
 
-        const width =
-            usableWidth /
+        const cellWidth =
+            width /
             navLinks.length;
 
         return {
-            left:
-                rect.left +
-                padding +
-                index * width,
-
-            top:
-                rect.top +
-                padding,
-
-            width:
-                width,
-
-            height:
-                rect.height -
-                padding * 2
+            rect,
+            padding,
+            width,
+            cellWidth
         };
     }
 
 
-    function dragSlider(
+    function pointerToIndex(
         x
     ) {
 
-        if (!navPages) {
+        const bounds =
+            getNavBounds();
+
+        if (!bounds) {
+            return 0;
+        }
+
+        let position =
+            x -
+            bounds.rect.left -
+            bounds.padding;
+
+        position =
+            Math.max(
+                0,
+                Math.min(
+                    position,
+                    bounds.width -
+                    0.01
+                )
+            );
+
+        return Math.max(
+            0,
+            Math.min(
+                Math.floor(
+                    position /
+                    bounds.cellWidth
+                ),
+                navLinks.length - 1
+            )
+        );
+    }
+
+
+    function updateDrag(
+        x
+    ) {
+
+        const bounds =
+            getNavBounds();
+
+        if (!bounds || !navIndicator) {
             return;
         }
 
-        const index =
-            getPageIndexFromX(
+
+        /*
+            Work in the exact same grid
+            used by the three links.
+        */
+
+        const position =
+            x -
+            bounds.rect.left -
+            bounds.padding;
+
+        const selectedIndex =
+            pointerToIndex(
                 x
             );
 
         dragIndex =
-            index;
+            selectedIndex;
+
 
         /*
-            The pill and the cells now use
-            the exact same geometry, so the
-            text and slider cannot drift apart.
+            Position continuously inside
+            the selected cell.
         */
 
-        const cell =
-            getCellRect(
-                index
+        let cellStart =
+            selectedIndex *
+            bounds.cellWidth;
+
+        let cellCenter =
+            cellStart +
+            bounds.cellWidth / 2;
+
+        let pointerInCell =
+            position -
+            cellStart;
+
+        let offset =
+            pointerInCell -
+            bounds.cellWidth / 2;
+
+
+        /*
+            Limit the elastic movement.
+        */
+
+        offset =
+            Math.max(
+                -bounds.cellWidth * .22,
+                Math.min(
+                    offset,
+                    bounds.cellWidth * .22
+                )
             );
 
-        if (!cell) {
-            return;
-        }
-
-        const navRect =
-            navPages.getBoundingClientRect();
-
-        /*
-            Follow the pointer continuously
-            inside the current/nearest cell.
-        */
-
-        const cellCenter =
-            cell.left +
-            cell.width / 2;
-
-        const distance =
-            x -
-            cellCenter;
-
-        const elastic =
-            Math.min(
-                7,
-                Math.abs(distance) * .08
-            );
-
-        let left =
-            cell.left -
-            navRect.left -
-            elastic / 2;
-
-        const width =
-            cell.width +
-            elastic;
 
         navPages.style.setProperty(
-            "--slider-index",
-            index
-        );
-
-        /*
-            Switch from index-based placement
-            to direct pixel placement while dragging.
-        */
-
-        navPages.style.setProperty(
-            "--slider-drag-x",
-            `${left}px`
+            "--nav-index",
+            selectedIndex
         );
 
         navPages.style.setProperty(
-            "--slider-drag-width",
-            `${width}px`
+            "--drag-offset",
+            `${offset}px`
         );
 
         navPages.style.setProperty(
-            "--slider-scale-x",
-            "1.035"
+            "--indicator-scale-x",
+            String(
+                1 +
+                Math.min(
+                    .035,
+                    Math.abs(offset) /
+                    bounds.cellWidth *
+                    .055
+                )
+            )
         );
 
         navPages.style.setProperty(
-            "--slider-scale-y",
+            "--indicator-scale-y",
             ".91"
         );
 
 
-        /*
-            Temporary direct-position mode.
-        */
-
-        navPages.classList.add(
-            "slider-direct"
-        );
-
-
         navLinks.forEach(
-            (link, i) => {
+            (link, index) => {
 
                 link.classList.toggle(
                     "active",
-                    i === index
+                    index ===
+                        selectedIndex
                 );
             }
         );
@@ -719,40 +608,6 @@
 
 
     if (navPages) {
-
-        /*
-            Dynamically add the direct drag
-            positioning rule once.
-        */
-
-        const directStyle =
-            document.createElement(
-                "style"
-            );
-
-        directStyle.textContent = `
-            .nav-pages.slider-direct::before {
-                left:
-                    var(--slider-drag-x)
-                    !important;
-
-                width:
-                    var(--slider-drag-width)
-                    !important;
-
-                transition:
-                    left .025s linear,
-                    width .025s linear,
-                    transform .12s linear,
-                    border-radius .12s linear,
-                    filter .12s linear;
-            }
-        `;
-
-        document.head.appendChild(
-            directStyle
-        );
-
 
         navPages.addEventListener(
             "pointerdown",
@@ -765,6 +620,7 @@
                 ) {
                     return;
                 }
+
 
                 dragging =
                     true;
@@ -779,19 +635,22 @@
                     event.clientX;
 
                 dragIndex =
-                    getPageIndexFromX(
+                    pointerToIndex(
                         event.clientX
                     );
+
 
                 navPages.classList.add(
                     "dragging"
                 );
 
+
                 navPages.setPointerCapture?.(
                     event.pointerId
                 );
 
-                dragSlider(
+
+                updateDrag(
                     event.clientX
                 );
             }
@@ -820,7 +679,7 @@
                         true;
                 }
 
-                dragSlider(
+                updateDrag(
                     event.clientX
                 );
             }
@@ -839,6 +698,7 @@
                 return;
             }
 
+
             dragging =
                 false;
 
@@ -846,39 +706,48 @@
                 "dragging"
             );
 
+
             navPages.releasePointerCapture?.(
                 event.pointerId
             );
+
 
             pointerId =
                 null;
 
 
-            const index =
-                Math.max(
-                    0,
-                    Math.min(
-                        dragIndex,
-                        navLinks.length - 1
-                    )
-                );
-
             const selected =
-                navLinks[index];
+                navLinks[
+                    Math.max(
+                        0,
+                        Math.min(
+                            dragIndex,
+                            navLinks.length - 1
+                        )
+                    )
+                ];
 
 
-            navPages.classList.remove(
-                "slider-direct"
+            navPages.style.setProperty(
+                "--drag-offset",
+                "0px"
+            );
+
+            navPages.style.setProperty(
+                "--indicator-scale-x",
+                "1"
+            );
+
+            navPages.style.setProperty(
+                "--indicator-scale-y",
+                "1"
             );
 
 
-            if (selected) {
-
-                setActive(
-                    selected,
-                    true
-                );
-            }
+            setActive(
+                selected,
+                true
+            );
 
 
             if (
@@ -891,39 +760,36 @@
                         "href"
                     );
 
-                const destination =
-                    normalizeHref(
-                        href
-                    );
-
                 if (
                     href &&
-                    destination !==
+                    normalizeHref(
+                        href
+                    ) !==
                         currentPage()
                 ) {
 
-                    document.body.classList.add(
-                        "page-leaving"
-                    );
+                    /*
+                        Navigate without fading the
+                        current page to black.
+                    */
 
-                    setTimeout(
-                        () => {
+                    setTimeout(() => {
 
-                            window.location.href =
-                                href;
+                        window.location.href =
+                            href;
 
-                        },
-                        430
-                    );
+                    }, 260);
                 }
             }
 
 
-            moved =
-                false;
-
             dragIndex =
-                -1;
+                activeIndex;
+
+
+            setTimeout(() => {
+                moved = false;
+            }, 50);
         }
 
 
@@ -940,7 +806,7 @@
 
 
     /* =========================================
-       NAVIGATION
+       NORMAL NAVIGATION
     ========================================= */
 
     navLinks.forEach(
@@ -1020,20 +886,18 @@
                     );
 
 
-                    document.body.classList.add(
-                        "page-leaving"
-                    );
+                    /*
+                        No page-out animation.
+                        The new page's entrance animation
+                        handles the transition cleanly.
+                    */
 
+                    setTimeout(() => {
 
-                    setTimeout(
-                        () => {
+                        window.location.href =
+                            href;
 
-                            window.location.href =
-                                href;
-
-                        },
-                        430
-                    );
+                    }, 260);
                 }
             );
         }
@@ -1048,50 +912,17 @@
         "pageshow",
         () => {
 
-            document.body.classList.remove(
-                "page-leaving"
+            const current =
+                getCurrentLink();
+
+            setActive(
+                current,
+                false
             );
 
             applyTheme(
                 getTheme()
             );
-
-
-            /*
-                Recalculate after the browser,
-                font rendering and layout have
-                settled. No nav entrance animation.
-            */
-
-            requestAnimationFrame(() => {
-
-                requestAnimationFrame(() => {
-
-                    if (
-                        document.fonts &&
-                        document.fonts.ready
-                    ) {
-
-                        document.fonts.ready.then(
-                            () => {
-
-                                setActive(
-                                    getCurrentLink(),
-                                    false
-                                );
-
-                            }
-                        );
-
-                    } else {
-
-                        setActive(
-                            getCurrentLink(),
-                            false
-                        );
-                    }
-                });
-            });
         }
     );
 
@@ -1112,17 +943,14 @@
             );
 
             resizeTimer =
-                setTimeout(
-                    () => {
+                setTimeout(() => {
 
-                        setActive(
-                            getCurrentLink(),
-                            false
-                        );
+                    setActive(
+                        getCurrentLink(),
+                        false
+                    );
 
-                    },
-                    80
-                );
+                }, 80);
         }
     );
 
@@ -1158,7 +986,6 @@
                         );
                     }
                 );
-
             },
             {
                 threshold: .12,
@@ -1174,121 +1001,12 @@
             observer.observe(
                 element
             );
-
         }
     );
 
 
     /* =========================================
-       BUTTON RIPPLE
-    ========================================= */
-
-    document
-        .querySelectorAll(
-            ".buttons a"
-        )
-        .forEach(
-            button => {
-
-                button.addEventListener(
-                    "pointerdown",
-                    event => {
-
-                        const rect =
-                            button.getBoundingClientRect();
-
-                        const size =
-                            Math.max(
-                                rect.width,
-                                rect.height
-                            );
-
-                        const ripple =
-                            document.createElement(
-                                "span"
-                            );
-
-                        Object.assign(
-                            ripple.style,
-                            {
-                                position:
-                                    "absolute",
-
-                                width:
-                                    `${size}px`,
-
-                                height:
-                                    `${size}px`,
-
-                                left:
-                                    `${
-                                        event.clientX -
-                                        rect.left -
-                                        size / 2
-                                    }px`,
-
-                                top:
-                                    `${
-                                        event.clientY -
-                                        rect.top -
-                                        size / 2
-                                    }px`,
-
-                                borderRadius:
-                                    "50%",
-
-                                background:
-                                    "rgba(255,255,255,.24)",
-
-                                pointerEvents:
-                                    "none"
-                            }
-                        );
-
-                        button.appendChild(
-                            ripple
-                        );
-
-                        ripple.animate(
-                            [
-                                {
-                                    transform:
-                                        "scale(0)",
-
-                                    opacity:
-                                        .75
-                                },
-                                {
-                                    transform:
-                                        "scale(2)",
-
-                                    opacity:
-                                        0
-                                }
-                            ],
-                            {
-                                duration:
-                                    600,
-
-                                easing:
-                                    "cubic-bezier(.22,1,.36,1)"
-                            }
-                        );
-
-                        setTimeout(
-                            () => {
-                                ripple.remove();
-                            },
-                            650
-                        );
-                    }
-                );
-            }
-        );
-
-
-    /* =========================================
-       GLASS POINTER RESPONSE
+       GLASS TOUCH / POINTER RESPONSE
     ========================================= */
 
     document
@@ -1314,21 +1032,19 @@
 
                         const x =
                             (
-                                (
-                                    event.clientX -
-                                    rect.left
-                                ) /
-                                rect.width
-                            ) * 100;
+                                event.clientX -
+                                rect.left
+                            ) /
+                            rect.width *
+                            100;
 
                         const y =
                             (
-                                (
-                                    event.clientY -
-                                    rect.top
-                                ) /
-                                rect.height
-                            ) * 100;
+                                event.clientY -
+                                rect.top
+                            ) /
+                            rect.height *
+                            100;
 
                         element.style.setProperty(
                             "--glass-x",
@@ -1339,90 +1055,9 @@
                             "--glass-y",
                             `${y}%`
                         );
-
-                        element.style.setProperty(
-                            "--theme-x",
-                            `${x}%`
-                        );
-
-                        element.style.setProperty(
-                            "--theme-y",
-                            `${y}%`
-                        );
                     }
                 );
             }
         );
-
-
-    /* =========================================
-       BACKGROUND PARALLAX
-    ========================================= */
-
-    let targetX =
-        0;
-
-    let targetY =
-        0;
-
-    let currentX =
-        0;
-
-    let currentY =
-        0;
-
-
-    window.addEventListener(
-        "pointermove",
-        event => {
-
-            if (
-                event.pointerType ===
-                    "touch"
-            ) {
-                return;
-            }
-
-            targetX =
-                (
-                    event.clientX /
-                    window.innerWidth -
-                    .5
-                ) * 2;
-
-            targetY =
-                (
-                    event.clientY /
-                    window.innerHeight -
-                    .5
-                ) * 2;
-        }
-    );
-
-
-    function animateBackground() {
-
-        currentX +=
-            (
-                targetX -
-                currentX
-            ) * .018;
-
-        currentY +=
-            (
-                targetY -
-                currentY
-            ) * .018;
-
-        document.body.style.backgroundPosition =
-            `${currentX * 6}px ${currentY * 6}px`;
-
-        requestAnimationFrame(
-            animateBackground
-        );
-    }
-
-
-    animateBackground();
 
 })();
