@@ -3,9 +3,6 @@
 
     const THEME_KEY = "shard-theme";
 
-    const nav =
-        document.querySelector("nav");
-
     const navPages =
         document.querySelector(".nav-pages");
 
@@ -44,11 +41,9 @@
 
 
     function loadTheme() {
-
         let theme = "dark";
 
         try {
-
             const saved =
                 localStorage.getItem(
                     THEME_KEY
@@ -60,8 +55,7 @@
             ) {
                 theme = saved;
             }
-
-        } catch (error) {
+        } catch {
             theme = "dark";
         }
 
@@ -84,15 +78,11 @@
                 : "light";
 
         try {
-
             localStorage.setItem(
                 THEME_KEY,
                 next
             );
-
-        } catch (error) {
-            /* Storage unavailable */
-        }
+        } catch {}
 
         applyTheme(next);
     }
@@ -102,11 +92,9 @@
 
 
     if (themeButton) {
-
         themeButton.addEventListener(
             "click",
             event => {
-
                 event.preventDefault();
                 event.stopPropagation();
 
@@ -138,14 +126,13 @@
             return "index.html";
         }
 
-        const filename =
+        return (
             path
                 .split("/")
                 .filter(Boolean)
                 .pop()
-                .toLowerCase();
-
-        return filename || "index.html";
+                .toLowerCase()
+        ) || "index.html";
     }
 
 
@@ -201,7 +188,6 @@
                         )
                     ) === page
                 );
-
             })
             || navLinks[0]
         );
@@ -216,7 +202,7 @@
         getCurrentLink();
 
 
-    function metricsFor(link) {
+    function getMetrics(link) {
 
         if (
             !link ||
@@ -237,21 +223,24 @@
 
     function setSlider(
         link,
-        animate = true
+        animated = true
     ) {
 
-        if (!link || !navPages) {
+        if (
+            !link ||
+            !navPages
+        ) {
             return;
         }
 
         const metrics =
-            metricsFor(link);
+            getMetrics(link);
 
         if (!metrics) {
             return;
         }
 
-        if (!animate) {
+        if (!animated) {
             navPages.classList.add(
                 "slider-static"
             );
@@ -267,7 +256,7 @@
             `${metrics.width}px`
         );
 
-        if (!animate) {
+        if (!animated) {
 
             navPages.offsetWidth;
 
@@ -278,23 +267,9 @@
     }
 
 
-    const sliderStyle =
-        document.createElement("style");
-
-    sliderStyle.textContent = `
-        .nav-pages.slider-static::before {
-            transition: none !important;
-        }
-    `;
-
-    document.head.appendChild(
-        sliderStyle
-    );
-
-
     function setActive(
         link,
-        animate = true
+        animated = true
     ) {
 
         if (!link) {
@@ -313,10 +288,14 @@
 
         setSlider(
             link,
-            animate
+            animated
         );
     }
 
+
+    /*
+        Place it instantly after layout is ready.
+    */
 
     function initializeSlider() {
 
@@ -337,16 +316,10 @@
 
         document.fonts.ready.then(() => {
 
-            initializeSlider();
-
             requestAnimationFrame(() => {
-
-                setSlider(
-                    activeLink,
-                    false
-                );
-
+                initializeSlider();
             });
+
         });
 
     } else {
@@ -359,7 +332,7 @@
 
 
     /* =========================================
-       DRAGGING
+       DRAG
     ========================================= */
 
     let dragging = false;
@@ -374,7 +347,8 @@
     function closestLink(x) {
 
         let closest = null;
-        let smallest = Infinity;
+        let smallest =
+            Infinity;
 
         navLinks.forEach(link => {
 
@@ -393,7 +367,6 @@
             if (
                 distance < smallest
             ) {
-
                 smallest = distance;
                 closest = link;
             }
@@ -425,11 +398,12 @@
         const rect =
             target.getBoundingClientRect();
 
-        const baseLeft =
+        const targetLeft =
             rect.left -
-            navRect.left;
+            navRect.left -
+            6;
 
-        const baseWidth =
+        const targetWidth =
             rect.width;
 
         const center =
@@ -441,25 +415,29 @@
 
         const stretch =
             Math.min(
-                9,
-                Math.abs(distance) * .16
+                8,
+                Math.abs(distance) * .14
             );
 
+        let left =
+            targetLeft -
+            stretch / 2;
+
         const width =
-            baseWidth +
+            targetWidth +
             stretch;
 
-        let left =
-            baseLeft -
-            stretch / 2;
+        const maxLeft =
+            navPages.clientWidth -
+            width -
+            12;
 
         left =
             Math.max(
                 0,
                 Math.min(
                     left,
-                    navPages.clientWidth -
-                    width
+                    maxLeft
                 )
             );
 
@@ -490,8 +468,7 @@
             event => {
 
                 if (
-                    event.pointerType ===
-                        "mouse" &&
+                    event.pointerType === "mouse" &&
                     event.button !== 0
                 ) {
                     return;
@@ -597,29 +574,6 @@
             );
 
 
-            navPages.animate(
-                [
-                    {
-                        transform:
-                            "scale(1)"
-                    },
-                    {
-                        transform:
-                            "scale(.988)"
-                    },
-                    {
-                        transform:
-                            "scale(1)"
-                    }
-                ],
-                {
-                    duration: 220,
-                    easing:
-                        "cubic-bezier(.22,1,.36,1)"
-                }
-            );
-
-
             if (moved) {
 
                 const href =
@@ -637,11 +591,6 @@
                     destination !==
                         currentPage()
                 ) {
-
-                    /*
-                        The nav remains visible.
-                        Only the page content fades.
-                    */
 
                     document.body.classList.add(
                         "page-leaving"
@@ -683,7 +632,6 @@
             event => {
 
                 if (moved) {
-
                     event.preventDefault();
 
                     moved = false;
@@ -710,9 +658,7 @@
                 }
 
                 const destination =
-                    normalizeHref(
-                        href
-                    );
+                    normalizeHref(href);
 
                 if (
                     destination ===
@@ -737,7 +683,8 @@
                 );
 
                 /*
-                    Do not fade the nav.
+                    Only the page content fades.
+                    The navigation stays fixed.
                 */
 
                 document.body.classList.add(
@@ -769,45 +716,18 @@
 
             loadTheme();
 
-            /*
-                Wait for the new page layout,
-                then place the pill exactly where
-                the current tab belongs.
-            */
-
             requestAnimationFrame(() => {
 
                 requestAnimationFrame(() => {
 
-                    if (
-                        document.fonts &&
-                        document.fonts.ready
-                    ) {
+                    const current =
+                        getCurrentLink();
 
-                        document.fonts.ready.then(
-                            () => {
+                    setActive(
+                        current,
+                        false
+                    );
 
-                                const current =
-                                    getCurrentLink();
-
-                                setActive(
-                                    current,
-                                    false
-                                );
-
-                            }
-                        );
-
-                    } else {
-
-                        const current =
-                            getCurrentLink();
-
-                        setActive(
-                            current,
-                            false
-                        );
-                    }
                 });
             });
         }
@@ -881,6 +801,7 @@
             }
         );
 
+
     revealElements.forEach(element => {
         observer.observe(element);
     });
@@ -891,7 +812,9 @@
     ========================================= */
 
     document
-        .querySelectorAll(".buttons a")
+        .querySelectorAll(
+            ".buttons a"
+        )
         .forEach(button => {
 
             button.addEventListener(
@@ -976,6 +899,7 @@
 
     let currentX = 0;
     let currentY = 0;
+
 
     window.addEventListener(
         "pointermove",
