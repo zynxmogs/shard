@@ -11,8 +11,8 @@
     --text: #ffffff;
     --muted: rgba(255, 255, 255, .72);
 
-    --border: rgba(255, 255, 255, .11);
-    --nav-bg: rgba(15, 11, 12, .76);
+    --border: rgba(255, 255, 255, .14);
+    --nav-bg: rgba(18, 12, 14, .52);
 
     --red: #ff465a;
     --ease: cubic-bezier(.22, 1, .36, 1);
@@ -32,12 +32,12 @@ body {
     background:
         radial-gradient(
             circle at 15% 15%,
-            rgba(255, 58, 78, .09),
+            rgba(255, 58, 78, .10),
             transparent 28%
         ),
         radial-gradient(
             circle at 85% 78%,
-            rgba(255, 78, 96, .065),
+            rgba(255, 78, 96, .07),
             transparent 30%
         ),
         var(--bg);
@@ -255,11 +255,10 @@ body::after {
 }
 
 .secondary {
+    border: 1px solid var(--border);
+
     background:
         rgba(255,255,255,.045);
-
-    border:
-        1px solid var(--border);
 
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
@@ -500,7 +499,7 @@ body::after {
 
 
 /* =========================================
-   BOTTOM NAVIGATION
+   BOTTOM NAV
 ========================================= */
 
 nav {
@@ -521,7 +520,8 @@ nav {
 
     padding: 0;
 
-    transform: translateX(-50%);
+    transform:
+        translateX(-50%);
 
     background: transparent;
 
@@ -537,19 +537,14 @@ nav {
 
     touch-action: none;
 
-    /*
-        No nav entrance animation.
-    */
     animation: none !important;
     opacity: 1 !important;
 }
 
-nav strong {
-    display: none;
-}
 
-
-/* Main navigation pill */
+/* =========================================
+   MAIN NAV GLASS PILL
+========================================= */
 
 .nav-pages {
     position: relative;
@@ -562,65 +557,105 @@ nav strong {
     padding: 6px;
 
     border:
-        1px solid rgba(255,255,255,.12);
+        1px solid rgba(255,255,255,.14);
 
-    border-radius: 19px;
+    border-radius: 20px;
 
     background:
-        var(--nav-bg);
+        linear-gradient(
+            135deg,
+            rgba(255,255,255,.105),
+            rgba(255,255,255,.035)
+        );
 
     backdrop-filter:
-        blur(25px)
-        saturate(150%);
+        blur(32px)
+        saturate(180%);
 
     -webkit-backdrop-filter:
-        blur(25px)
-        saturate(150%);
+        blur(32px)
+        saturate(180%);
 
     box-shadow:
-        0 18px 55px rgba(0,0,0,.42),
-        inset 0 1px 0 rgba(255,255,255,.08);
+        0 20px 55px rgba(0,0,0,.42),
+        0 4px 18px rgba(0,0,0,.12),
+        inset 0 1px 0 rgba(255,255,255,.12),
+        inset 0 -1px 0 rgba(0,0,0,.12);
+}
+
+.nav-pages::after {
+    content: "";
+
+    position: absolute;
+    inset: 1px;
+
+    border-radius: 18px;
+
+    background:
+        linear-gradient(
+            120deg,
+            rgba(255,255,255,.07),
+            transparent 32%,
+            transparent 68%,
+            rgba(255,70,90,.035)
+        );
+
+    pointer-events: none;
 }
 
 
-/* Main slider */
+/* =========================================
+   SLIDER
+========================================= */
 
 .nav-pages::before {
     content: "";
 
     position: absolute;
 
-    top: 6px;
-    left:
-        calc(6px + var(--slider-x, 0px));
+    top: var(--slider-y, 6px);
+    left: var(--slider-x, 6px);
 
     width:
         var(--slider-width, 0px);
 
-    height: 34px;
+    height:
+        var(--slider-height, 34px);
 
     border-radius: 13px;
 
     background:
-        rgba(255,255,255,.085);
+        linear-gradient(
+            135deg,
+            rgba(255,255,255,.16),
+            rgba(255,255,255,.065)
+        );
+
+    border:
+        1px solid rgba(255,255,255,.075);
 
     box-shadow:
-        inset 0 1px 0 rgba(255,255,255,.08),
-        0 2px 10px rgba(0,0,0,.12);
+        inset 0 1px 0 rgba(255,255,255,.12),
+        inset 0 -1px 0 rgba(0,0,0,.08),
+        0 3px 12px rgba(0,0,0,.12);
 
     pointer-events: none;
 
     transition:
         left .42s var(--ease),
+        top .42s var(--ease),
         width .42s var(--ease),
+        height .42s var(--ease),
         transform .2s var(--ease);
 }
 
 .nav-pages.dragging::before {
     transition:
         left .035s linear,
+        top .035s linear,
         width .035s linear,
-        transform .18s var(--ease);
+        height .035s linear,
+        transform .16s var(--ease);
 
     transform:
         scaleY(.88);
@@ -631,11 +666,13 @@ nav strong {
 }
 
 
-/* Main navigation links */
+/* =========================================
+   NAV LINKS
+========================================= */
 
 .nav-pages a {
     position: relative;
-    z-index: 2;
+    z-index: 3;
 
     display: inline-flex;
     align-items: center;
@@ -668,11 +705,16 @@ nav strong {
     -webkit-tap-highlight-color: transparent;
 
     transition:
-        color .25s ease;
+        color .25s ease,
+        transform .2s var(--ease);
 }
 
 .nav-pages a:hover {
     color: #fff;
+}
+
+.nav-pages a:active {
+    transform: scale(.96);
 }
 
 .nav-pages a.active {
@@ -685,29 +727,37 @@ nav strong {
 ========================================= */
 
 .theme-pill {
+    position: relative;
+
     display: inline-flex;
 
     padding: 6px;
 
     border:
-        1px solid rgba(255,255,255,.12);
+        1px solid rgba(255,255,255,.14);
 
-    border-radius: 19px;
+    border-radius: 20px;
 
     background:
-        var(--nav-bg);
+        linear-gradient(
+            135deg,
+            rgba(255,255,255,.105),
+            rgba(255,255,255,.035)
+        );
 
     backdrop-filter:
-        blur(25px)
-        saturate(150%);
+        blur(32px)
+        saturate(180%);
 
     -webkit-backdrop-filter:
-        blur(25px)
-        saturate(150%);
+        blur(32px)
+        saturate(180%);
 
     box-shadow:
-        0 18px 55px rgba(0,0,0,.42),
-        inset 0 1px 0 rgba(255,255,255,.08);
+        0 20px 55px rgba(0,0,0,.42),
+        0 4px 18px rgba(0,0,0,.12),
+        inset 0 1px 0 rgba(255,255,255,.12),
+        inset 0 -1px 0 rgba(0,0,0,.12);
 
     touch-action: manipulation;
 }
@@ -722,7 +772,7 @@ nav strong {
     border-radius: 13px;
 
     color:
-        rgba(255,255,255,.7);
+        rgba(255,255,255,.72);
 
     background:
         rgba(255,255,255,.035);
@@ -808,7 +858,12 @@ body.page-leaving .footer {
 
 body.light {
     --bg: #240b0f;
-    --nav-bg: rgba(74,22,28,.55);
+
+    --nav-bg:
+        rgba(74,22,28,.52);
+
+    --border:
+        rgba(255,255,255,.17);
 
     background:
         radial-gradient(
@@ -834,14 +889,23 @@ body.light::after {
         rgba(255,146,158,.18);
 }
 
-body.light .card {
+body.light .nav-pages,
+body.light .theme-pill {
     background:
-        rgba(255,255,255,.065);
+        linear-gradient(
+            135deg,
+            rgba(255,255,255,.13),
+            rgba(255,255,255,.05)
+        );
 }
 
 body.light .nav-pages::before {
     background:
-        rgba(255,255,255,.12);
+        linear-gradient(
+            135deg,
+            rgba(255,255,255,.18),
+            rgba(255,255,255,.07)
+        );
 }
 
 
@@ -994,11 +1058,8 @@ body.light .nav-pages::before {
     }
 
     .hero p {
-        font-size:
-            .94rem;
-
-        line-height:
-            1.72;
+        font-size: .94rem;
+        line-height: 1.72;
     }
 
     .buttons {
@@ -1033,11 +1094,7 @@ body.light .nav-pages::before {
     }
 
     .nav-pages::before {
-        top: 5px;
-        left:
-            calc(5px + var(--slider-x, 0px));
-
-        height: 32px;
+        top: var(--slider-y, 5px);
     }
 
     .nav-pages a {
