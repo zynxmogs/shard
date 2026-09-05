@@ -542,13 +542,6 @@ nav {
         0 18px 55px rgba(0,0,0,.42),
         inset 0 1px 0 rgba(255,255,255,.08);
 
-    animation:
-        dockIn
-        .8s
-        .1s
-        var(--ease)
-        both;
-
     user-select: none;
     -webkit-user-select: none;
 
@@ -558,9 +551,6 @@ nav {
 nav strong {
     display: none;
 }
-
-
-/* Main navigation */
 
 .nav-pages {
     position: relative;
@@ -574,9 +564,6 @@ nav strong {
 
     border-radius: 14px;
 }
-
-
-/* Sliding pill */
 
 .nav-pages::before {
     content: "";
@@ -619,8 +606,9 @@ nav strong {
     transform: scaleY(.88);
 }
 
-
-/* Navigation links */
+.nav-pages.slider-static::before {
+    transition: none !important;
+}
 
 .nav-pages a {
     position: relative;
@@ -668,11 +656,6 @@ nav strong {
 .nav-pages a.active {
     color: #fff;
 }
-
-
-/* =========================================
-   SEPARATE THEME PILL
-========================================= */
 
 .theme-pill {
     position: relative;
@@ -755,11 +738,6 @@ nav strong {
 body.page-leaving {
     pointer-events: none;
 }
-
-/*
-   The navigation is deliberately excluded
-   so it stays visible while the page changes.
-*/
 
 body.page-leaving .hero,
 body.page-leaving .section,
@@ -908,24 +886,6 @@ body.light .nav-pages::before {
             scale(1);
 
         filter: blur(0);
-    }
-}
-
-@keyframes dockIn {
-    from {
-        opacity: 0;
-
-        transform:
-            translate(-50%,25px)
-            scale(.94);
-    }
-
-    to {
-        opacity: 1;
-
-        transform:
-            translate(-50%,0)
-            scale(1);
     }
 }
 
