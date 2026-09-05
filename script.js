@@ -1,26 +1,23 @@
 (() => {
     "use strict";
 
-
-    /* =========================================
-       ELEMENTS
-    ========================================= */
+    const THEME_KEY = "shard-theme";
 
     const nav =
         document.querySelector("nav");
 
-    const navContainer =
-        document.querySelector("nav > div");
+    const navPages =
+        document.querySelector(".nav-pages");
 
     const navLinks = [
         ...document.querySelectorAll(
-            "nav a"
+            ".nav-pages a"
         )
     ];
 
-    const toggle =
+    const themeButton =
         document.querySelector(
-            "nav .toggle"
+            ".theme-button"
         );
 
 
@@ -28,12 +25,7 @@
        THEME
     ========================================= */
 
-    const THEME_KEY =
-        "shard-theme";
-
-
     function applyTheme(theme) {
-
         const isLight =
             theme === "light";
 
@@ -42,61 +34,76 @@
             isLight
         );
 
-        if (toggle) {
-            toggle.textContent =
+        if (themeButton) {
+            themeButton.textContent =
                 isLight
                     ? "Dark"
-                    : "Theme";
+                    : "Light";
         }
     }
 
 
     function loadTheme() {
 
-        const savedTheme =
-            localStorage.getItem(
-                THEME_KEY
-            );
+        let theme = "dark";
 
-        applyTheme(
-            savedTheme === "light"
-                ? "light"
-                : "dark"
-        );
+        try {
+
+            const saved =
+                localStorage.getItem(
+                    THEME_KEY
+                );
+
+            if (
+                saved === "light" ||
+                saved === "dark"
+            ) {
+                theme = saved;
+            }
+
+        } catch (error) {
+            theme = "dark";
+        }
+
+        applyTheme(theme);
     }
 
 
     function toggleTheme() {
 
-        const isLight =
+        const current =
             document.body.classList.contains(
                 "light"
-            );
+            )
+                ? "light"
+                : "dark";
 
-        const newTheme =
-            isLight
+        const next =
+            current === "light"
                 ? "dark"
                 : "light";
 
-        localStorage.setItem(
-            THEME_KEY,
-            newTheme
-        );
+        try {
 
-        applyTheme(newTheme);
+            localStorage.setItem(
+                THEME_KEY,
+                next
+            );
+
+        } catch (error) {
+            /* Storage unavailable */
+        }
+
+        applyTheme(next);
     }
 
-
-    /*
-        Apply saved theme immediately.
-    */
 
     loadTheme();
 
 
-    if (toggle) {
+    if (themeButton) {
 
-        toggle.addEventListener(
+        themeButton.addEventListener(
             "click",
             event => {
 
@@ -113,61 +120,49 @@
        PAGE DETECTION
     ========================================= */
 
-    function getCurrentPage() {
+    function currentPage() {
 
-        let page =
-            window.location.pathname
-                .split("/")
-                .filter(Boolean)
-                .pop();
+        let path =
+            window.location.pathname;
 
-        if (!page) {
-            return "index.html";
-        }
-
-        page =
-            page.toLowerCase();
-
-        /*
-            Treat the root page as index.html.
-        */
+        path =
+            path
+                .split("?")[0]
+                .split("#")[0];
 
         if (
-            page === "/" ||
-            page === ""
+            !path ||
+            path === "/" ||
+            path.endsWith("/")
         ) {
             return "index.html";
         }
 
-        return page;
+        const filename =
+            path
+                .split("/")
+                .filter(Boolean)
+                .pop()
+                .toLowerCase();
+
+        return filename || "index.html";
     }
 
 
-    /* =========================================
-       LINK MATCHING
-    ========================================= */
-
-    function normalizePage(href) {
+    function normalizeHref(href) {
 
         if (!href) {
             return "";
         }
 
-        /*
-            Ignore external URLs.
-        */
-
         if (
             href.startsWith("http://") ||
             href.startsWith("https://") ||
-            href.startsWith("//")
+            href.startsWith("//") ||
+            href.startsWith("#")
         ) {
             return href;
         }
-
-        /*
-            Remove query strings / hashes.
-        */
 
         href =
             href
@@ -181,30 +176,32 @@
             return "index.html";
         }
 
-        return href
-            .split("/")
-            .filter(Boolean)
-            .pop()
-            .toLowerCase();
+        return (
+            href
+                .split("/")
+                .filter(Boolean)
+                .pop()
+                .toLowerCase()
+        );
     }
 
 
-    function findCurrentLink() {
+    function getCurrentLink() {
 
-        const currentPage =
-            getCurrentPage();
+        const page =
+            currentPage();
 
         return (
             navLinks.find(link => {
 
-                const href =
-                    normalizePage(
+                return (
+                    normalizeHref(
                         link.getAttribute(
                             "href"
                         )
-                    );
+                    ) === page
+                );
 
-                return href === currentPage;
             })
             || navLinks[0]
         );
@@ -212,105 +209,80 @@
 
 
     /* =========================================
-       SLIDER GEOMETRY
+       SLIDER
     ========================================= */
 
     let activeLink =
-        findCurrentLink();
+        getCurrentLink();
 
 
-    function getSliderPosition(
-        element
-    ) {
+    function metricsFor(link) {
 
         if (
-            !element ||
-            !navContainer
+            !link ||
+            !navPages
         ) {
             return null;
         }
 
-        const navRect =
-            navContainer.getBoundingClientRect();
-
-        const linkRect =
-            element.getBoundingClientRect();
-
         return {
             left:
-                linkRect.left -
-                navRect.left,
+                link.offsetLeft,
 
             width:
-                linkRect.width
+                link.offsetWidth
         };
     }
 
 
     function setSlider(
-        element,
+        link,
         animate = true
     ) {
 
-        if (!element) {
+        if (!link || !navPages) {
             return;
         }
 
-        const position =
-            getSliderPosition(
-                element
-            );
+        const metrics =
+            metricsFor(link);
 
-        if (!position) {
+        if (!metrics) {
             return;
         }
 
         if (!animate) {
-
-            /*
-                Temporarily disable CSS transition.
-            */
-
-            navContainer.classList.add(
-                "slider-no-transition"
+            navPages.classList.add(
+                "slider-static"
             );
         }
 
-        navContainer.style.setProperty(
-            "--slider-left",
-            `${position.left}px`
+        navPages.style.setProperty(
+            "--slider-x",
+            `${metrics.left}px`
         );
 
-        navContainer.style.setProperty(
+        navPages.style.setProperty(
             "--slider-width",
-            `${position.width}px`
+            `${metrics.width}px`
         );
 
         if (!animate) {
 
-            /*
-                Force layout before restoring
-                transitions.
-            */
+            navPages.offsetWidth;
 
-            navContainer.offsetWidth;
-
-            navContainer.classList.remove(
-                "slider-no-transition"
+            navPages.classList.remove(
+                "slider-static"
             );
         }
     }
 
 
-    /*
-        CSS helper for instant placement.
-    */
-
     const sliderStyle =
         document.createElement("style");
 
     sliderStyle.textContent = `
-        nav > div.slider-no-transition::before {
+        .nav-pages.slider-static::before {
             transition: none !important;
         }
     `;
@@ -320,11 +292,7 @@
     );
 
 
-    /* =========================================
-       ACTIVE LINK
-    ========================================= */
-
-    function setActiveLink(
+    function setActive(
         link,
         animate = true
     ) {
@@ -344,31 +312,23 @@
         activeLink = link;
 
         setSlider(
-            activeLink,
+            link,
             animate
         );
     }
 
 
-    /* =========================================
-       INITIAL POSITION
-    ========================================= */
-
     function initializeSlider() {
 
         const current =
-            findCurrentLink();
+            getCurrentLink();
 
-        setActiveLink(
+        setActive(
             current,
             false
         );
     }
 
-
-    /*
-        Do this after fonts and layout are ready.
-    */
 
     if (
         document.fonts &&
@@ -377,43 +337,44 @@
 
         document.fonts.ready.then(() => {
 
-            requestAnimationFrame(
-                initializeSlider
-            );
+            initializeSlider();
+
+            requestAnimationFrame(() => {
+
+                setSlider(
+                    activeLink,
+                    false
+                );
+
+            });
         });
 
     } else {
 
-        requestAnimationFrame(
+        window.addEventListener(
+            "load",
             initializeSlider
         );
     }
 
 
     /* =========================================
-       DRAG STATE
+       DRAGGING
     ========================================= */
 
-    let isDragging = false;
+    let dragging = false;
+    let pointerId = null;
 
-    let dragStartX = 0;
-
-    let draggedDistance = 0;
+    let startX = 0;
+    let moved = false;
 
     let dragTarget = null;
 
-    let dragPointerId = null;
 
-
-    /* =========================================
-       CLOSEST TAB
-    ========================================= */
-
-    function findClosestLink(x) {
+    function closestLink(x) {
 
         let closest = null;
-        let closestDistance =
-            Infinity;
+        let smallest = Infinity;
 
         navLinks.forEach(link => {
 
@@ -430,12 +391,10 @@
                 );
 
             if (
-                distance <
-                closestDistance
+                distance < smallest
             ) {
-                closestDistance =
-                    distance;
 
+                smallest = distance;
                 closest = link;
             }
         });
@@ -444,100 +403,75 @@
     }
 
 
-    /* =========================================
-       DRAG SLIDER
-    ========================================= */
+    function updateDrag(x) {
 
-    function updateDrag(
-        pointerX
-    ) {
-
-        if (!navContainer) {
+        if (!navPages) {
             return;
         }
 
         const target =
-            findClosestLink(
-                pointerX
-            );
+            closestLink(x);
 
         if (!target) {
             return;
         }
 
-        dragTarget = target;
+        dragTarget =
+            target;
 
         const navRect =
-            navContainer.getBoundingClientRect();
+            navPages.getBoundingClientRect();
 
-        const targetRect =
+        const rect =
             target.getBoundingClientRect();
 
-        const targetLeft =
-            targetRect.left -
+        const baseLeft =
+            rect.left -
             navRect.left;
 
-        const targetWidth =
-            targetRect.width;
+        const baseWidth =
+            rect.width;
 
-        const targetCenter =
-            targetRect.left +
-            targetRect.width / 2;
+        const center =
+            rect.left +
+            rect.width / 2;
 
-        /*
-            Distance of finger from
-            target center.
-        */
-
-        const difference =
-            pointerX -
-            targetCenter;
-
-        /*
-            Stretch based on distance.
-        */
+        const distance =
+            x - center;
 
         const stretch =
             Math.min(
-                14,
-                Math.abs(difference) * .22
+                9,
+                Math.abs(distance) * .16
             );
 
-        let width =
-            targetWidth +
+        const width =
+            baseWidth +
             stretch;
 
         let left =
-            targetLeft -
+            baseLeft -
             stretch / 2;
-
-        /*
-            Keep the pill inside the dock.
-        */
 
         left =
             Math.max(
                 0,
                 Math.min(
                     left,
-                    navRect.width -
+                    navPages.clientWidth -
                     width
                 )
             );
 
-        navContainer.style.setProperty(
-            "--slider-left",
+        navPages.style.setProperty(
+            "--slider-x",
             `${left}px`
         );
 
-        navContainer.style.setProperty(
+        navPages.style.setProperty(
             "--slider-width",
             `${width}px`
         );
-
-        /*
-            Text follows the finger too.
-        */
 
         navLinks.forEach(link => {
 
@@ -549,19 +483,11 @@
     }
 
 
-    /* =========================================
-       POINTER DOWN
-    ========================================= */
+    if (navPages) {
 
-    if (nav) {
-
-        nav.addEventListener(
+        navPages.addEventListener(
             "pointerdown",
             event => {
-
-                /*
-                    Only use left mouse button.
-                */
 
                 if (
                     event.pointerType ===
@@ -571,26 +497,25 @@
                     return;
                 }
 
-                isDragging = true;
+                dragging = true;
+                moved = false;
 
-                dragPointerId =
+                pointerId =
                     event.pointerId;
 
-                dragStartX =
+                startX =
                     event.clientX;
 
-                draggedDistance = 0;
-
                 dragTarget =
-                    findClosestLink(
+                    closestLink(
                         event.clientX
                     );
 
-                nav.classList.add(
+                navPages.classList.add(
                     "dragging"
                 );
 
-                nav.setPointerCapture?.(
+                navPages.setPointerCapture?.(
                     event.pointerId
                 );
 
@@ -601,27 +526,26 @@
         );
 
 
-        /* =====================================
-           POINTER MOVE
-        ===================================== */
-
-        nav.addEventListener(
+        navPages.addEventListener(
             "pointermove",
             event => {
 
                 if (
-                    !isDragging ||
+                    !dragging ||
                     event.pointerId !==
-                        dragPointerId
+                        pointerId
                 ) {
                     return;
                 }
 
-                draggedDistance =
+                if (
                     Math.abs(
                         event.clientX -
-                        dragStartX
-                    );
+                        startX
+                    ) > 6
+                ) {
+                    moved = true;
+                }
 
                 updateDrag(
                     event.clientX
@@ -630,36 +554,28 @@
         );
 
 
-        /* =====================================
-           POINTER END
-        ===================================== */
-
         function finishDrag(event) {
 
             if (
-                !isDragging ||
+                !dragging ||
                 event.pointerId !==
-                    dragPointerId
+                    pointerId
             ) {
                 return;
             }
 
-            isDragging = false;
+            dragging = false;
 
-            nav.classList.remove(
+            navPages.classList.remove(
                 "dragging"
             );
 
-            nav.releasePointerCapture?.(
+            navPages.releasePointerCapture?.(
                 event.pointerId
             );
 
-            dragPointerId = null;
+            pointerId = null;
 
-
-            /*
-                Nothing useful selected.
-            */
 
             if (!dragTarget) {
 
@@ -675,64 +591,81 @@
             const selected =
                 dragTarget;
 
-            activeLink =
-                selected;
-
-
-            navLinks.forEach(link => {
-
-                link.classList.toggle(
-                    "active",
-                    link === selected
-                );
-            });
-
-
-            /*
-                Snap the pill into its
-                exact position.
-            */
-
-            setSlider(
+            setActive(
                 selected,
                 true
             );
 
 
-            /*
-                Small spring effect on the dock.
-            */
-
-            nav.animate(
+            navPages.animate(
                 [
                     {
                         transform:
-                            "translateX(-50%) scale(1)"
+                            "scale(1)"
                     },
                     {
                         transform:
-                            "translateX(-50%) scale(.985)"
+                            "scale(.988)"
                     },
                     {
                         transform:
-                            "translateX(-50%) scale(1)"
+                            "scale(1)"
                     }
                 ],
                 {
-                    duration: 260,
+                    duration: 220,
                     easing:
                         "cubic-bezier(.22,1,.36,1)"
                 }
             );
+
+
+            if (moved) {
+
+                const href =
+                    selected.getAttribute(
+                        "href"
+                    );
+
+                const destination =
+                    normalizeHref(
+                        href
+                    );
+
+                if (
+                    href &&
+                    destination !==
+                        currentPage()
+                ) {
+
+                    /*
+                        The nav remains visible.
+                        Only the page content fades.
+                    */
+
+                    document.body.classList.add(
+                        "page-leaving"
+                    );
+
+                    setTimeout(() => {
+
+                        window.location.href =
+                            href;
+
+                    }, 430);
+                }
+            }
+
+            dragTarget = null;
         }
 
 
-        nav.addEventListener(
+        navPages.addEventListener(
             "pointerup",
             finishDrag
         );
 
-        nav.addEventListener(
+        navPages.addEventListener(
             "pointercancel",
             finishDrag
         );
@@ -740,7 +673,7 @@
 
 
     /* =========================================
-       NAVIGATION
+       NORMAL NAVIGATION
     ========================================= */
 
     navLinks.forEach(link => {
@@ -749,23 +682,14 @@
             "click",
             event => {
 
-                /*
-                    If user dragged, don't allow
-                    the browser's click event to
-                    navigate a second time.
-                */
-
-                if (
-                    draggedDistance > 8
-                ) {
+                if (moved) {
 
                     event.preventDefault();
 
-                    draggedDistance = 0;
+                    moved = false;
 
                     return;
                 }
-
 
                 const href =
                     link.getAttribute(
@@ -776,43 +700,28 @@
                     return;
                 }
 
-
-                /*
-                    External links remain normal links.
-                */
-
                 if (
-                    href.startsWith(
-                        "http://"
-                    ) ||
-                    href.startsWith(
-                        "https://"
-                    ) ||
+                    href.startsWith("http://") ||
+                    href.startsWith("https://") ||
                     href.startsWith("//") ||
                     href.startsWith("#")
                 ) {
                     return;
                 }
 
-
                 const destination =
-                    normalizePage(
+                    normalizeHref(
                         href
                     );
 
-
-                /*
-                    Already on this page.
-                */
-
                 if (
                     destination ===
-                    getCurrentPage()
+                    currentPage()
                 ) {
 
                     event.preventDefault();
 
-                    setActiveLink(
+                    setActive(
                         link,
                         true
                     );
@@ -820,34 +729,20 @@
                     return;
                 }
 
-
                 event.preventDefault();
 
-
-                /*
-                    Move the pill first.
-                */
-
-                setActiveLink(
+                setActive(
                     link,
                     true
                 );
 
-
                 /*
-                    Then fade the page out.
+                    Do not fade the nav.
                 */
 
                 document.body.classList.add(
                     "page-leaving"
                 );
-
-
-                /*
-                    The nav itself remains visible
-                    and completes its animation before
-                    navigation.
-                */
 
                 setTimeout(() => {
 
@@ -861,64 +756,60 @@
 
 
     /* =========================================
-       DRAG -> NAVIGATION
+       PAGE SHOW
     ========================================= */
 
-    /*
-        Navigation after a genuine drag.
-        Delay slightly so the snap animation
-        remains visible.
-    */
-
-    nav?.addEventListener(
-        "pointerup",
+    window.addEventListener(
+        "pageshow",
         () => {
 
-            if (
-                !dragTarget ||
-                draggedDistance <= 8
-            ) {
-                return;
-            }
-
-            const target =
-                dragTarget;
-
-            const href =
-                target.getAttribute(
-                    "href"
-                );
-
-            draggedDistance = 0;
-
-            if (!href) {
-                return;
-            }
-
-            if (
-                href.startsWith("http") ||
-                href.startsWith("#")
-            ) {
-                return;
-            }
-
-            if (
-                normalizePage(href) ===
-                getCurrentPage()
-            ) {
-                return;
-            }
-
-            document.body.classList.add(
+            document.body.classList.remove(
                 "page-leaving"
             );
 
-            setTimeout(() => {
+            loadTheme();
 
-                window.location.href =
-                    href;
+            /*
+                Wait for the new page layout,
+                then place the pill exactly where
+                the current tab belongs.
+            */
 
-            }, 430);
+            requestAnimationFrame(() => {
+
+                requestAnimationFrame(() => {
+
+                    if (
+                        document.fonts &&
+                        document.fonts.ready
+                    ) {
+
+                        document.fonts.ready.then(
+                            () => {
+
+                                const current =
+                                    getCurrentLink();
+
+                                setActive(
+                                    current,
+                                    false
+                                );
+
+                            }
+                        );
+
+                    } else {
+
+                        const current =
+                            getCurrentLink();
+
+                        setActive(
+                            current,
+                            false
+                        );
+                    }
+                });
+            });
         }
     );
 
@@ -941,55 +832,14 @@
                 setTimeout(() => {
 
                     const current =
-                        findCurrentLink();
+                        getCurrentLink();
 
-                    setActiveLink(
+                    setActive(
                         current,
                         false
                     );
 
                 }, 80);
-        }
-    );
-
-
-    /* =========================================
-       PAGE SHOW
-    ========================================= */
-
-    window.addEventListener(
-        "pageshow",
-        () => {
-
-            document.body.classList.remove(
-                "page-leaving"
-            );
-
-            loadTheme();
-
-            const current =
-                findCurrentLink();
-
-            setActiveLink(
-                current,
-                false
-            );
-
-            /*
-                One more alignment after the
-                browser has finished painting.
-            */
-
-            requestAnimationFrame(() => {
-                requestAnimationFrame(() => {
-
-                    setSlider(
-                        current,
-                        false
-                    );
-
-                });
-            });
         }
     );
 
@@ -1003,29 +853,26 @@
             ".card, .footer"
         );
 
-
     const observer =
         new IntersectionObserver(
             entries => {
 
-                entries.forEach(
-                    entry => {
+                entries.forEach(entry => {
 
-                        if (
-                            !entry.isIntersecting
-                        ) {
-                            return;
-                        }
-
-                        entry.target.classList.add(
-                            "visible"
-                        );
-
-                        observer.unobserve(
-                            entry.target
-                        );
+                    if (
+                        !entry.isIntersecting
+                    ) {
+                        return;
                     }
-                );
+
+                    entry.target.classList.add(
+                        "visible"
+                    );
+
+                    observer.unobserve(
+                        entry.target
+                    );
+                });
             },
             {
                 threshold: .12,
@@ -1034,14 +881,9 @@
             }
         );
 
-
-    revealElements.forEach(
-        element => {
-            observer.observe(
-                element
-            );
-        }
-    );
+    revealElements.forEach(element => {
+        observer.observe(element);
+    });
 
 
     /* =========================================
@@ -1049,9 +891,7 @@
     ========================================= */
 
     document
-        .querySelectorAll(
-            ".buttons a"
-        )
+        .querySelectorAll(".buttons a")
         .forEach(button => {
 
             button.addEventListener(
@@ -1072,37 +912,28 @@
                             "span"
                         );
 
-                    ripple.style.position =
-                        "absolute";
-
-                    ripple.style.width =
-                        `${size}px`;
-
-                    ripple.style.height =
-                        `${size}px`;
-
-                    ripple.style.left =
-                        `${
-                            event.clientX -
-                            rect.left -
-                            size / 2
-                        }px`;
-
-                    ripple.style.top =
-                        `${
-                            event.clientY -
-                            rect.top -
-                            size / 2
-                        }px`;
-
-                    ripple.style.borderRadius =
-                        "50%";
-
-                    ripple.style.background =
-                        "rgba(255,255,255,.3)";
-
-                    ripple.style.pointerEvents =
-                        "none";
+                    Object.assign(
+                        ripple.style,
+                        {
+                            position: "absolute",
+                            width: `${size}px`,
+                            height: `${size}px`,
+                            left: `${
+                                event.clientX -
+                                rect.left -
+                                size / 2
+                            }px`,
+                            top: `${
+                                event.clientY -
+                                rect.top -
+                                size / 2
+                            }px`,
+                            borderRadius: "50%",
+                            background:
+                                "rgba(255,255,255,.24)",
+                            pointerEvents: "none"
+                        }
+                    );
 
                     button.appendChild(
                         ripple
@@ -1113,7 +944,7 @@
                             {
                                 transform:
                                     "scale(0)",
-                                opacity: .8
+                                opacity: .75
                             },
                             {
                                 transform:
@@ -1122,18 +953,15 @@
                             }
                         ],
                         {
-                            duration: 650,
+                            duration: 600,
                             easing:
                                 "cubic-bezier(.22,1,.36,1)"
                         }
                     );
 
-                    setTimeout(
-                        () => {
-                            ripple.remove();
-                        },
-                        700
-                    );
+                    setTimeout(() => {
+                        ripple.remove();
+                    }, 650);
                 }
             );
         });
@@ -1143,32 +971,30 @@
        BACKGROUND PARALLAX
     ========================================= */
 
-    let mouseX = 0;
-    let mouseY = 0;
+    let targetX = 0;
+    let targetY = 0;
 
     let currentX = 0;
     let currentY = 0;
-
 
     window.addEventListener(
         "pointermove",
         event => {
 
             if (
-                event.pointerType ===
-                "touch"
+                event.pointerType === "touch"
             ) {
                 return;
             }
 
-            mouseX =
+            targetX =
                 (
                     event.clientX /
                     window.innerWidth -
                     .5
                 ) * 2;
 
-            mouseY =
+            targetY =
                 (
                     event.clientY /
                     window.innerHeight -
@@ -1181,13 +1007,13 @@
     function animateBackground() {
 
         currentX +=
-            (mouseX - currentX) * .025;
+            (targetX - currentX) * .018;
 
         currentY +=
-            (mouseY - currentY) * .025;
+            (targetY - currentY) * .018;
 
         document.body.style.backgroundPosition =
-            `${currentX * 8}px ${currentY * 8}px`;
+            `${currentX * 7}px ${currentY * 7}px`;
 
         requestAnimationFrame(
             animateBackground
