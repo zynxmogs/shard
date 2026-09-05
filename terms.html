@@ -10,17 +10,44 @@
 
 <div class="container">
 <nav>
-    <strong>Shard</strong>
+    <span class="shard-label">Shard</span>
 
     <div class="nav-pages">
+        <span class="nav-indicator"></span>
+
         <a href="index.html">Home</a>
         <a href="privacy.html">Privacy</a>
         <a href="terms.html">Terms</a>
     </div>
 
     <div class="theme-pill">
-        <button class="theme-button">Light</button>
+        <button
+            class="theme-button"
+            type="button"
+            aria-label="Switch theme"
+        >
+            <span class="theme-icon theme-icon-moon">
+                <svg viewBox="0 0 24 24">
+                    <path d="M20.4 15.2A8.5 8.5 0 0 1 8.8 3.6 8.5 8.5 0 1 0 20.4 15.2Z"/>
+                </svg>
+            </span>
+
+            <span class="theme-icon theme-icon-sun">
+                <svg viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="3.4"/>
+                    <path d="M12 2v2"/>
+                    <path d="M12 20v2"/>
+                    <path d="m4.93 4.93 1.41 1.41"/>
+                    <path d="m17.66 17.66 1.41 1.41"/>
+                    <path d="M2 12h2"/>
+                    <path d="M20 12h2"/>
+                    <path d="m4.93 19.07 1.41-1.41"/>
+                    <path d="m17.66 6.34 1.41-1.41"/>
+                </svg>
+            </span>
+        </button>
     </div>
+</nav>
 </nav>
 
 <div class="section">
