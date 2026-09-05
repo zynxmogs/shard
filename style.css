@@ -8,19 +8,13 @@
 
 :root {
     --bg: #080708;
-    --surface: rgba(255, 255, 255, 0.045);
-    --surface-hover: rgba(255, 255, 255, 0.075);
-    --border: rgba(255, 255, 255, 0.11);
-
     --text: #ffffff;
-    --muted: rgba(255, 255, 255, 0.72);
+    --muted: rgba(255, 255, 255, .72);
+
+    --border: rgba(255, 255, 255, .11);
+    --nav-bg: rgba(15, 11, 12, .76);
 
     --red: #ff465a;
-    --red-light: #ff8d9a;
-    --red-dark: #c52539;
-
-    --nav-bg: rgba(15, 11, 12, 0.72);
-
     --ease: cubic-bezier(.22, 1, .36, 1);
 }
 
@@ -38,12 +32,12 @@ body {
     background:
         radial-gradient(
             circle at 15% 15%,
-            rgba(255, 58, 78, 0.10),
+            rgba(255, 58, 78, .09),
             transparent 28%
         ),
         radial-gradient(
             circle at 85% 78%,
-            rgba(255, 78, 96, 0.07),
+            rgba(255, 78, 96, .065),
             transparent 30%
         ),
         var(--bg);
@@ -69,6 +63,7 @@ body::after {
     max-height: 620px;
 
     border-radius: 50%;
+
     pointer-events: none;
 
     filter: blur(115px);
@@ -134,13 +129,14 @@ body::after {
     background:
         linear-gradient(
             135deg,
-            #ffffff 10%,
-            #ffffff 48%,
+            #fff 10%,
+            #fff 52%,
             #ff737f 100%
         );
 
     -webkit-background-clip: text;
     background-clip: text;
+
     color: transparent;
 
     animation:
@@ -159,7 +155,6 @@ body::after {
 
     font-size: clamp(.98rem, 1.7vw, 1.08rem);
     line-height: 1.8;
-    letter-spacing: -.01em;
 
     animation:
         fadeUp
@@ -260,9 +255,11 @@ body::after {
 }
 
 .secondary {
-    border: 1px solid var(--border);
+    background:
+        rgba(255,255,255,.045);
 
-    background: rgba(255,255,255,.045);
+    border:
+        1px solid var(--border);
 
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
@@ -273,7 +270,8 @@ body::after {
 }
 
 .secondary:hover {
-    background: rgba(255,255,255,.075);
+    background:
+        rgba(255,255,255,.075);
 }
 
 
@@ -291,7 +289,9 @@ body::after {
 
     padding: 32px;
 
-    border: 1px solid var(--border);
+    border:
+        1px solid var(--border);
+
     border-radius: 23px;
 
     background:
@@ -513,14 +513,53 @@ nav {
 
     display: flex;
     align-items: center;
-    gap: 7px;
+
+    gap: 8px;
 
     width: max-content;
     max-width: calc(100% - 20px);
 
-    padding: 6px;
+    padding: 0;
 
     transform: translateX(-50%);
+
+    background: transparent;
+
+    border: 0;
+
+    box-shadow: none;
+
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+
+    user-select: none;
+    -webkit-user-select: none;
+
+    touch-action: none;
+
+    /*
+        No nav entrance animation.
+    */
+    animation: none !important;
+    opacity: 1 !important;
+}
+
+nav strong {
+    display: none;
+}
+
+
+/* Main navigation pill */
+
+.nav-pages {
+    position: relative;
+
+    display: flex;
+    align-items: center;
+
+    gap: 2px;
+
+    padding: 6px;
 
     border:
         1px solid rgba(255,255,255,.12);
@@ -541,44 +580,24 @@ nav {
     box-shadow:
         0 18px 55px rgba(0,0,0,.42),
         inset 0 1px 0 rgba(255,255,255,.08);
-
-    user-select: none;
-    -webkit-user-select: none;
-
-    touch-action: none;
 }
 
-nav strong {
-    display: none;
-}
 
-.nav-pages {
-    position: relative;
-
-    display: flex;
-    align-items: center;
-
-    gap: 2px;
-
-    padding: 0;
-
-    border-radius: 14px;
-}
+/* Main slider */
 
 .nav-pages::before {
     content: "";
 
     position: absolute;
 
+    top: 6px;
     left:
-        var(--slider-x, 0px);
-
-    top: 0;
+        calc(6px + var(--slider-x, 0px));
 
     width:
         var(--slider-width, 0px);
 
-    height: 100%;
+    height: 34px;
 
     border-radius: 13px;
 
@@ -603,12 +622,16 @@ nav strong {
         width .035s linear,
         transform .18s var(--ease);
 
-    transform: scaleY(.88);
+    transform:
+        scaleY(.88);
 }
 
 .nav-pages.slider-static::before {
     transition: none !important;
 }
+
+
+/* Main navigation links */
 
 .nav-pages a {
     position: relative;
@@ -619,12 +642,12 @@ nav strong {
     justify-content: center;
 
     height: 34px;
-    padding: 0 14px;
+
+    padding:
+        0 14px;
 
     border: 0;
     border-radius: 13px;
-
-    outline: none;
 
     color:
         rgba(255,255,255,.62);
@@ -645,8 +668,7 @@ nav strong {
     -webkit-tap-highlight-color: transparent;
 
     transition:
-        color .25s ease,
-        opacity .25s ease;
+        color .25s ease;
 }
 
 .nav-pages a:hover {
@@ -657,57 +679,56 @@ nav strong {
     color: #fff;
 }
 
+
+/* =========================================
+   SEPARATE THEME PILL
+========================================= */
+
 .theme-pill {
-    position: relative;
-
-    flex-shrink: 0;
-
     display: inline-flex;
 
-    padding: 2px;
+    padding: 6px;
 
     border:
-        1px solid rgba(255,255,255,.08);
+        1px solid rgba(255,255,255,.12);
 
-    border-radius: 14px;
+    border-radius: 19px;
+
+    background:
+        var(--nav-bg);
+
+    backdrop-filter:
+        blur(25px)
+        saturate(150%);
+
+    -webkit-backdrop-filter:
+        blur(25px)
+        saturate(150%);
+
+    box-shadow:
+        0 18px 55px rgba(0,0,0,.42),
+        inset 0 1px 0 rgba(255,255,255,.08);
+
+    touch-action: manipulation;
+}
+
+.theme-button {
+    height: 34px;
+
+    padding:
+        0 14px;
+
+    border: 0;
+    border-radius: 13px;
+
+    color:
+        rgba(255,255,255,.7);
 
     background:
         rgba(255,255,255,.035);
 
-    box-shadow:
-        inset 0 1px 0 rgba(255,255,255,.05);
-
-    transition:
-        background .25s ease,
-        border-color .25s ease;
-}
-
-.theme-pill:hover {
-    background:
-        rgba(255,255,255,.06);
-
-    border-color:
-        rgba(255,255,255,.12);
-}
-
-.theme-button {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-
-    height: 30px;
-    padding: 0 11px;
-
-    border: 0;
-    border-radius: 11px;
-
-    color:
-        rgba(255,255,255,.72);
-
-    background: transparent;
-
     font-family: inherit;
-    font-size: .74rem;
+    font-size: .76rem;
     font-weight: 600;
 
     cursor: pointer;
@@ -722,7 +743,7 @@ nav strong {
     color: #fff;
 
     background:
-        rgba(255,255,255,.065);
+        rgba(255,255,255,.075);
 }
 
 .theme-button:active {
@@ -787,12 +808,7 @@ body.page-leaving .footer {
 
 body.light {
     --bg: #240b0f;
-
-    --nav-bg:
-        rgba(74,22,28,.52);
-
-    --border:
-        rgba(255,255,255,.17);
+    --nav-bg: rgba(74,22,28,.55);
 
     background:
         radial-gradient(
@@ -830,7 +846,7 @@ body.light .nav-pages::before {
 
 
 /* =========================================
-   KEYFRAMES
+   ANIMATIONS
 ========================================= */
 
 @keyframes heroIn {
@@ -858,12 +874,14 @@ body.light .nav-pages::before {
 @keyframes fadeUp {
     from {
         opacity: 0;
-        transform: translateY(20px);
+        transform:
+            translateY(20px);
     }
 
     to {
         opacity: 1;
-        transform: translateY(0);
+        transform:
+            translateY(0);
     }
 }
 
@@ -892,12 +910,14 @@ body.light .nav-pages::before {
 @keyframes pageOut {
     from {
         opacity: 1;
-        transform: translateY(0);
+        transform:
+            translateY(0);
     }
 
     to {
         opacity: 0;
-        transform: translateY(-10px);
+        transform:
+            translateY(-10px);
     }
 }
 
@@ -952,11 +972,13 @@ body.light .nav-pages::before {
         width:
             calc(100% - 20px);
 
-        padding-bottom: 115px;
+        padding-bottom:
+            115px;
     }
 
     .hero {
-        min-height: 650px;
+        min-height:
+            650px;
 
         padding:
             110px 8px 80px;
@@ -972,8 +994,11 @@ body.light .nav-pages::before {
     }
 
     .hero p {
-        font-size: .94rem;
-        line-height: 1.72;
+        font-size:
+            .94rem;
+
+        line-height:
+            1.72;
     }
 
     .buttons {
@@ -1001,8 +1026,18 @@ body.light .nav-pages::before {
     nav {
         bottom: 12px;
         gap: 5px;
+    }
+
+    .nav-pages {
         padding: 5px;
-        border-radius: 17px;
+    }
+
+    .nav-pages::before {
+        top: 5px;
+        left:
+            calc(5px + var(--slider-x, 0px));
+
+        height: 32px;
     }
 
     .nav-pages a {
@@ -1011,9 +1046,13 @@ body.light .nav-pages::before {
         font-size: .72rem;
     }
 
+    .theme-pill {
+        padding: 5px;
+    }
+
     .theme-button {
-        height: 28px;
-        padding: 0 9px;
+        height: 32px;
+        padding: 0 10px;
         font-size: .7rem;
     }
 }
