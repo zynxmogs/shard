@@ -8,17 +8,19 @@
 
 :root {
     --bg: #080708;
-
     --text: #ffffff;
-    --muted: rgba(255, 255, 255, .72);
+    --muted: rgba(255,255,255,.72);
 
-    --border: rgba(255, 255, 255, .12);
+    --border: rgba(255,255,255,.12);
 
-    --nav-bg: rgba(15, 10, 12, .58);
+    --glass-top: rgba(255,255,255,.11);
+    --glass-bottom: rgba(255,255,255,.035);
+
+    --nav-bg: rgba(16,10,12,.48);
 
     --red: #ff465a;
 
-    --ease: cubic-bezier(.22, 1, .36, 1);
+    --ease: cubic-bezier(.22,1,.36,1);
 }
 
 html {
@@ -34,13 +36,13 @@ body {
 
     background:
         radial-gradient(
-            circle at 15% 15%,
-            rgba(255, 58, 78, .10),
+            circle at 14% 14%,
+            rgba(255,55,76,.11),
             transparent 28%
         ),
         radial-gradient(
-            circle at 85% 78%,
-            rgba(255, 78, 96, .07),
+            circle at 84% 78%,
+            rgba(255,75,96,.07),
             transparent 30%
         ),
         var(--bg);
@@ -49,7 +51,7 @@ body {
     text-rendering: optimizeLegibility;
 
     transition:
-        background .45s ease,
+        background .55s ease,
         color .45s ease;
 }
 
@@ -71,15 +73,13 @@ body::after {
     pointer-events: none;
 
     filter: blur(115px);
-    opacity: .55;
 }
 
 body::before {
     top: -18%;
     left: -12%;
 
-    background:
-        rgba(255, 45, 66, .22);
+    background: rgba(255,45,66,.22);
 
     animation:
         floatRedOne
@@ -92,8 +92,7 @@ body::after {
     right: -15%;
     bottom: -18%;
 
-    background:
-        rgba(205, 35, 55, .16);
+    background: rgba(205,35,55,.16);
 
     animation:
         floatRedTwo
@@ -128,18 +127,16 @@ body::after {
 }
 
 .hero h1 {
-    font-size: clamp(4.2rem, 13vw, 8.5rem);
-
+    font-size: clamp(4.2rem,13vw,8.5rem);
     font-weight: 800;
     line-height: .9;
-
     letter-spacing: -.085em;
 
     background:
         linear-gradient(
             135deg,
-            #ffffff 10%,
-            #ffffff 52%,
+            #fff 10%,
+            #fff 52%,
             #ff737f 100%
         );
 
@@ -156,7 +153,7 @@ body::after {
 }
 
 .hero p {
-    width: min(680px, 100%);
+    width: min(680px,100%);
 
     margin-top: 30px;
 
@@ -170,7 +167,6 @@ body::after {
         );
 
     line-height: 1.8;
-    letter-spacing: -.01em;
 
     animation:
         fadeUp
@@ -237,18 +233,20 @@ body::after {
         linear-gradient(
             110deg,
             transparent 25%,
-            rgba(255,255,255,.22) 50%,
+            rgba(255,255,255,.23) 50%,
             transparent 75%
         );
 
-    transform: translateX(-120%);
+    transform:
+        translateX(-120%);
 
     transition:
         transform .7s var(--ease);
 }
 
 .buttons a:hover::before {
-    transform: translateX(120%);
+    transform:
+        translateX(120%);
 }
 
 .buttons a:hover {
@@ -278,11 +276,11 @@ body::after {
 }
 
 .secondary {
-    border:
-        1px solid var(--border);
-
     background:
         rgba(255,255,255,.045);
+
+    border:
+        1px solid var(--border);
 
     backdrop-filter:
         blur(18px);
@@ -425,7 +423,6 @@ body::after {
 
 .card.visible li {
     opacity: 1;
-
     transform:
         translateY(0);
 }
@@ -461,7 +458,7 @@ body::after {
 ========================================= */
 
 .legal-content {
-    width: min(850px, 100%);
+    width: min(850px,100%);
 
     margin: auto;
 
@@ -546,14 +543,14 @@ body::after {
 
 
 /* =========================================
-   BOTTOM NAV
+   FIXED NAVIGATION
 ========================================= */
 
 nav {
     position: fixed;
 
     left: 50%;
-    bottom: 18px;
+    bottom: 17px;
 
     z-index: 1000;
 
@@ -563,35 +560,30 @@ nav {
 
     gap: 8px;
 
-    width: max-content;
-    max-width: calc(100vw - 20px);
-
-    padding: 0;
-
     transform:
         translateX(-50%);
+
+    width: max-content;
+    max-width:
+        calc(100vw - 16px);
+
+    padding: 0;
 
     background: transparent;
 
     border: 0;
-
     box-shadow: none;
-
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-
-    user-select: none;
-    -webkit-user-select: none;
-
-    touch-action: none;
 
     animation: none !important;
     opacity: 1 !important;
+
+    user-select: none;
+    -webkit-user-select: none;
 }
 
 
 /* =========================================
-   NAV PAGES PILL
+   MAIN NAV PILL
 ========================================= */
 
 .nav-pages {
@@ -605,34 +597,34 @@ nav {
     padding: 5px;
 
     border:
-        1px solid rgba(255,255,255,.14);
+        1px solid rgba(255,255,255,.15);
 
     border-radius: 20px;
 
     background:
         linear-gradient(
             135deg,
-            rgba(255,255,255,.095),
-            rgba(255,255,255,.028)
+            rgba(255,255,255,.105),
+            rgba(255,255,255,.025)
         );
 
     backdrop-filter:
-        blur(32px)
-        saturate(180%);
+        blur(34px)
+        saturate(190%);
 
     -webkit-backdrop-filter:
-        blur(32px)
-        saturate(180%);
+        blur(34px)
+        saturate(190%);
 
     box-shadow:
-        0 20px 55px
-        rgba(0,0,0,.44),
+        0 22px 55px
+        rgba(0,0,0,.45),
 
-        0 4px 18px
-        rgba(0,0,0,.10),
+        0 4px 20px
+        rgba(0,0,0,.12),
 
         inset 0 1px 0
-        rgba(255,255,255,.11),
+        rgba(255,255,255,.13),
 
         inset 0 -1px 0
         rgba(0,0,0,.10);
@@ -640,6 +632,8 @@ nav {
     overflow: hidden;
 
     touch-action: none;
+
+    transform: translateZ(0);
 }
 
 .nav-pages::after {
@@ -656,10 +650,10 @@ nav {
     background:
         linear-gradient(
             120deg,
-            rgba(255,255,255,.055),
-            transparent 35%,
-            transparent 68%,
-            rgba(255,60,80,.025)
+            rgba(255,255,255,.065),
+            transparent 32%,
+            transparent 67%,
+            rgba(255,65,85,.025)
         );
 
     pointer-events: none;
@@ -667,7 +661,7 @@ nav {
 
 
 /* =========================================
-   SLIDING PILL
+   LIQUID DRAGGABLE SLIDER
 ========================================= */
 
 .nav-pages::before {
@@ -694,50 +688,73 @@ nav {
     background:
         linear-gradient(
             135deg,
-            rgba(255,255,255,.16),
+            rgba(255,255,255,.18),
             rgba(255,255,255,.055)
         );
 
     border:
         1px solid
-        rgba(255,255,255,.075);
+        rgba(255,255,255,.085);
 
     box-shadow:
         inset 0 1px 0
-        rgba(255,255,255,.12),
+        rgba(255,255,255,.13),
+
+        inset 0 -1px 0
+        rgba(0,0,0,.07),
 
         0 3px 12px
-        rgba(0,0,0,.12);
+        rgba(0,0,0,.14);
+
+    filter:
+        blur(
+            var(--slider-blur, 0px)
+        );
 
     pointer-events: none;
+
+    transform:
+        translateZ(0)
+        scale(
+            var(--slider-scale, 1)
+        );
+
+    transform-origin:
+        center;
 
     transition:
         left .42s var(--ease),
         top .42s var(--ease),
         width .42s var(--ease),
         height .42s var(--ease),
-        transform .18s var(--ease);
+        transform .2s var(--ease),
+        filter .2s ease;
 }
+
+
+/* Liquid state while dragging */
 
 .nav-pages.dragging::before {
     transition:
-        left .035s linear,
-        top .035s linear,
-        width .035s linear,
-        height .035s linear,
-        transform .16s var(--ease);
+        left .025s linear,
+        top .025s linear,
+        width .025s linear,
+        height .025s linear,
+        transform .12s var(--ease),
+        filter .12s ease;
 
     transform:
-        scaleY(.88);
-}
+        translateZ(0)
+        scaleY(.88)
+        scaleX(1.025);
 
-.nav-pages.slider-static::before {
-    transition: none !important;
+    filter:
+        blur(.35px);
 }
 
 
 /* =========================================
-   NAV LINKS
+   MAIN NAV LINKS
 ========================================= */
 
 .nav-pages a {
@@ -745,9 +762,13 @@ nav {
 
     z-index: 3;
 
-    display: inline-flex;
+    display: flex;
+
     align-items: center;
     justify-content: center;
+
+    width: max-content;
+    min-width: 68px;
 
     height: 34px;
 
@@ -755,7 +776,6 @@ nav {
         0 14px;
 
     border: 0;
-
     border-radius: 13px;
 
     color:
@@ -769,6 +789,7 @@ nav {
     font-weight: 600;
 
     line-height: 1;
+    text-align: center;
 
     text-decoration: none;
     white-space: nowrap;
@@ -778,7 +799,7 @@ nav {
     -webkit-tap-highlight-color: transparent;
 
     transition:
-        color .25s ease,
+        color .2s ease,
         transform .2s var(--ease);
 }
 
@@ -788,7 +809,7 @@ nav {
 
 .nav-pages a:active {
     transform:
-        scale(.96);
+        scale(.95);
 }
 
 .nav-pages a.active {
@@ -805,38 +826,39 @@ nav {
 
     display: flex;
     align-items: center;
+    justify-content: center;
 
     padding: 5px;
 
     border:
-        1px solid rgba(255,255,255,.14);
+        1px solid rgba(255,255,255,.15);
 
     border-radius: 20px;
 
     background:
         linear-gradient(
             135deg,
-            rgba(255,255,255,.095),
-            rgba(255,255,255,.028)
+            rgba(255,255,255,.105),
+            rgba(255,255,255,.025)
         );
 
     backdrop-filter:
-        blur(32px)
-        saturate(180%);
+        blur(34px)
+        saturate(190%);
 
     -webkit-backdrop-filter:
-        blur(32px)
-        saturate(180%);
+        blur(34px)
+        saturate(190%);
 
     box-shadow:
-        0 20px 55px
-        rgba(0,0,0,.44),
+        0 22px 55px
+        rgba(0,0,0,.45),
 
-        0 4px 18px
-        rgba(0,0,0,.10),
+        0 4px 20px
+        rgba(0,0,0,.12),
 
         inset 0 1px 0
-        rgba(255,255,255,.11),
+        rgba(255,255,255,.13),
 
         inset 0 -1px 0
         rgba(0,0,0,.10);
@@ -845,44 +867,76 @@ nav {
 }
 
 .theme-button {
+    width: 34px;
     height: 34px;
 
-    padding:
-        0 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0;
 
     border: 0;
-
     border-radius: 13px;
 
     color:
-        rgba(255,255,255,.72);
+        rgba(255,255,255,.82);
 
     background:
-        rgba(255,255,255,.035);
+        rgba(255,255,255,.045);
 
     font-family: inherit;
-
-    font-size: .76rem;
-    font-weight: 600;
+    font-size: 1rem;
+    line-height: 1;
 
     cursor: pointer;
 
     transition:
-        color .25s ease,
-        background .25s ease,
-        transform .2s var(--ease);
+        color .2s ease,
+        background .2s ease,
+        transform .25s var(--ease);
 }
 
 .theme-button:hover {
     color: #fff;
 
     background:
-        rgba(255,255,255,.075);
+        rgba(255,255,255,.08);
 }
 
 .theme-button:active {
     transform:
-        scale(.94);
+        scale(.86);
+}
+
+.theme-button.switching {
+    animation:
+        themeSpin .42s var(--ease);
+}
+
+
+/* =========================================
+   SHARD TEXT
+========================================= */
+
+.shard-label {
+    position: relative;
+    z-index: 10;
+
+    color: #fff;
+
+    font-size: .9rem;
+    font-weight: 700;
+
+    letter-spacing: -.03em;
+
+    text-shadow:
+        0 2px 8px rgba(0,0,0,.8),
+        0 0 14px rgba(0,0,0,.45);
+
+    white-space: nowrap;
+
+    pointer-events: none;
 }
 
 
@@ -999,7 +1053,7 @@ body.light .nav-pages::before {
 
 
 /* =========================================
-   ANIMATIONS
+   KEYFRAMES
 ========================================= */
 
 @keyframes heroIn {
@@ -1118,6 +1172,26 @@ body.light .nav-pages::before {
     }
 }
 
+@keyframes themeSpin {
+    0% {
+        transform:
+            rotate(0deg)
+            scale(1);
+    }
+
+    45% {
+        transform:
+            rotate(18deg)
+            scale(.82);
+    }
+
+    100% {
+        transform:
+            rotate(0deg)
+            scale(1);
+    }
+}
+
 
 /* =========================================
    MOBILE
@@ -1191,13 +1265,13 @@ body.light .nav-pages::before {
         gap: 5px;
 
         max-width:
-            calc(100vw - 14px);
+            calc(100vw - 12px);
     }
 
     .nav-pages {
         padding: 4px;
 
-        border-radius: 17px;
+        border-radius: 18px;
     }
 
     .nav-pages::before {
@@ -1206,6 +1280,8 @@ body.light .nav-pages::before {
     }
 
     .nav-pages a {
+        min-width: 58px;
+
         height: 32px;
 
         padding:
@@ -1217,16 +1293,16 @@ body.light .nav-pages::before {
     .theme-pill {
         padding: 4px;
 
-        border-radius: 17px;
+        border-radius: 18px;
     }
 
     .theme-button {
+        width: 32px;
         height: 32px;
 
-        padding:
-            0 10px;
+        border-radius: 12px;
 
-        font-size: .69rem;
+        font-size: .92rem;
     }
 }
 
