@@ -8,13 +8,16 @@
 
 :root {
     --bg: #080708;
+
     --text: #ffffff;
     --muted: rgba(255, 255, 255, .72);
 
-    --border: rgba(255, 255, 255, .14);
-    --nav-bg: rgba(18, 12, 14, .52);
+    --border: rgba(255, 255, 255, .12);
+
+    --nav-bg: rgba(15, 10, 12, .58);
 
     --red: #ff465a;
+
     --ease: cubic-bezier(.22, 1, .36, 1);
 }
 
@@ -53,6 +56,7 @@ body {
 body::before,
 body::after {
     content: "";
+
     position: fixed;
     z-index: -2;
 
@@ -74,7 +78,8 @@ body::before {
     top: -18%;
     left: -12%;
 
-    background: rgba(255, 45, 66, .22);
+    background:
+        rgba(255, 45, 66, .22);
 
     animation:
         floatRedOne
@@ -87,7 +92,8 @@ body::after {
     right: -15%;
     bottom: -18%;
 
-    background: rgba(205, 35, 55, .16);
+    background:
+        rgba(205, 35, 55, .16);
 
     animation:
         floatRedTwo
@@ -99,6 +105,7 @@ body::after {
 .container {
     width: min(1100px, calc(100% - 32px));
     margin: auto;
+
     padding-bottom: 145px;
 }
 
@@ -122,15 +129,17 @@ body::after {
 
 .hero h1 {
     font-size: clamp(4.2rem, 13vw, 8.5rem);
+
     font-weight: 800;
     line-height: .9;
+
     letter-spacing: -.085em;
 
     background:
         linear-gradient(
             135deg,
-            #fff 10%,
-            #fff 52%,
+            #ffffff 10%,
+            #ffffff 52%,
             #ff737f 100%
         );
 
@@ -153,8 +162,15 @@ body::after {
 
     color: var(--muted);
 
-    font-size: clamp(.98rem, 1.7vw, 1.08rem);
+    font-size:
+        clamp(
+            .98rem,
+            1.7vw,
+            1.08rem
+        );
+
     line-height: 1.8;
+    letter-spacing: -.01em;
 
     animation:
         fadeUp
@@ -193,11 +209,13 @@ body::after {
     justify-content: center;
 
     min-width: 145px;
+
     padding: 13px 20px;
 
     border-radius: 14px;
 
     color: #fff;
+
     text-decoration: none;
 
     font-size: .9rem;
@@ -234,11 +252,13 @@ body::after {
 }
 
 .buttons a:hover {
-    transform: translateY(-4px);
+    transform:
+        translateY(-4px);
 }
 
 .buttons a:active {
-    transform: scale(.97);
+    transform:
+        scale(.97);
 }
 
 .primary {
@@ -250,22 +270,32 @@ body::after {
         );
 
     box-shadow:
-        0 9px 28px rgba(255,56,77,.18),
-        inset 0 1px 0 rgba(255,255,255,.35);
+        0 9px 28px
+        rgba(255,56,77,.18),
+
+        inset 0 1px 0
+        rgba(255,255,255,.35);
 }
 
 .secondary {
-    border: 1px solid var(--border);
+    border:
+        1px solid var(--border);
 
     background:
         rgba(255,255,255,.045);
 
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
+    backdrop-filter:
+        blur(18px);
+
+    -webkit-backdrop-filter:
+        blur(18px);
 
     box-shadow:
-        0 9px 28px rgba(0,0,0,.18),
-        inset 0 1px 0 rgba(255,255,255,.07);
+        0 9px 28px
+        rgba(0,0,0,.18),
+
+        inset 0 1px 0
+        rgba(255,255,255,.07);
 }
 
 .secondary:hover {
@@ -296,12 +326,18 @@ body::after {
     background:
         rgba(255,255,255,.042);
 
-    backdrop-filter: blur(26px);
-    -webkit-backdrop-filter: blur(26px);
+    backdrop-filter:
+        blur(26px);
+
+    -webkit-backdrop-filter:
+        blur(26px);
 
     box-shadow:
-        0 20px 65px rgba(0,0,0,.24),
-        inset 0 1px 0 rgba(255,255,255,.065);
+        0 20px 65px
+        rgba(0,0,0,.24),
+
+        inset 0 1px 0
+        rgba(255,255,255,.065);
 
     opacity: 0;
 
@@ -333,8 +369,11 @@ body::after {
         rgba(255,255,255,.052);
 
     box-shadow:
-        0 28px 75px rgba(0,0,0,.3),
-        inset 0 1px 0 rgba(255,255,255,.08);
+        0 28px 75px
+        rgba(0,0,0,.3),
+
+        inset 0 1px 0
+        rgba(255,255,255,.08);
 }
 
 .card h2 {
@@ -359,7 +398,8 @@ body::after {
 .card li {
     padding: 14px 16px;
 
-    color: rgba(255,255,255,.88);
+    color:
+        rgba(255,255,255,.88);
 
     border:
         1px solid rgba(255,255,255,.055);
@@ -373,7 +413,9 @@ body::after {
     line-height: 1.55;
 
     opacity: 0;
-    transform: translateY(12px);
+
+    transform:
+        translateY(12px);
 
     transition:
         opacity .5s ease,
@@ -383,7 +425,9 @@ body::after {
 
 .card.visible li {
     opacity: 1;
-    transform: translateY(0);
+
+    transform:
+        translateY(0);
 }
 
 .card.visible li:nth-child(1) {
@@ -446,6 +490,7 @@ body::after {
         );
 
     line-height: 1;
+
     letter-spacing: -.065em;
 }
 
@@ -473,7 +518,8 @@ body::after {
 .legal-content p {
     margin: 0;
 
-    color: rgba(255,255,255,.86);
+    color:
+        rgba(255,255,255,.86);
 
     font-size: .97rem;
     line-height: 1.9;
@@ -488,7 +534,8 @@ body::after {
     margin-top: 19px;
     padding-left: 24px;
 
-    color: rgba(255,255,255,.86);
+    color:
+        rgba(255,255,255,.86);
 
     line-height: 1.9;
 }
@@ -508,15 +555,16 @@ nav {
     left: 50%;
     bottom: 18px;
 
-    z-index: 100;
+    z-index: 1000;
 
     display: flex;
     align-items: center;
+    justify-content: center;
 
     gap: 8px;
 
     width: max-content;
-    max-width: calc(100% - 20px);
+    max-width: calc(100vw - 20px);
 
     padding: 0;
 
@@ -543,7 +591,7 @@ nav {
 
 
 /* =========================================
-   MAIN NAV GLASS PILL
+   NAV PAGES PILL
 ========================================= */
 
 .nav-pages {
@@ -554,7 +602,7 @@ nav {
 
     gap: 2px;
 
-    padding: 6px;
+    padding: 5px;
 
     border:
         1px solid rgba(255,255,255,.14);
@@ -564,8 +612,8 @@ nav {
     background:
         linear-gradient(
             135deg,
-            rgba(255,255,255,.105),
-            rgba(255,255,255,.035)
+            rgba(255,255,255,.095),
+            rgba(255,255,255,.028)
         );
 
     backdrop-filter:
@@ -577,27 +625,41 @@ nav {
         saturate(180%);
 
     box-shadow:
-        0 20px 55px rgba(0,0,0,.42),
-        0 4px 18px rgba(0,0,0,.12),
-        inset 0 1px 0 rgba(255,255,255,.12),
-        inset 0 -1px 0 rgba(0,0,0,.12);
+        0 20px 55px
+        rgba(0,0,0,.44),
+
+        0 4px 18px
+        rgba(0,0,0,.10),
+
+        inset 0 1px 0
+        rgba(255,255,255,.11),
+
+        inset 0 -1px 0
+        rgba(0,0,0,.10);
+
+    overflow: hidden;
+
+    touch-action: none;
 }
 
 .nav-pages::after {
     content: "";
 
     position: absolute;
+
     inset: 1px;
+
+    z-index: 1;
 
     border-radius: 18px;
 
     background:
         linear-gradient(
             120deg,
-            rgba(255,255,255,.07),
-            transparent 32%,
+            rgba(255,255,255,.055),
+            transparent 35%,
             transparent 68%,
-            rgba(255,70,90,.035)
+            rgba(255,60,80,.025)
         );
 
     pointer-events: none;
@@ -605,7 +667,7 @@ nav {
 
 
 /* =========================================
-   SLIDER
+   SLIDING PILL
 ========================================= */
 
 .nav-pages::before {
@@ -613,8 +675,13 @@ nav {
 
     position: absolute;
 
-    top: var(--slider-y, 6px);
-    left: var(--slider-x, 6px);
+    z-index: 0;
+
+    top:
+        var(--slider-y, 5px);
+
+    left:
+        var(--slider-x, 5px);
 
     width:
         var(--slider-width, 0px);
@@ -628,16 +695,19 @@ nav {
         linear-gradient(
             135deg,
             rgba(255,255,255,.16),
-            rgba(255,255,255,.065)
+            rgba(255,255,255,.055)
         );
 
     border:
-        1px solid rgba(255,255,255,.075);
+        1px solid
+        rgba(255,255,255,.075);
 
     box-shadow:
-        inset 0 1px 0 rgba(255,255,255,.12),
-        inset 0 -1px 0 rgba(0,0,0,.08),
-        0 3px 12px rgba(0,0,0,.12);
+        inset 0 1px 0
+        rgba(255,255,255,.12),
+
+        0 3px 12px
+        rgba(0,0,0,.12);
 
     pointer-events: none;
 
@@ -646,7 +716,7 @@ nav {
         top .42s var(--ease),
         width .42s var(--ease),
         height .42s var(--ease),
-        transform .2s var(--ease);
+        transform .18s var(--ease);
 }
 
 .nav-pages.dragging::before {
@@ -672,6 +742,7 @@ nav {
 
 .nav-pages a {
     position: relative;
+
     z-index: 3;
 
     display: inline-flex;
@@ -684,6 +755,7 @@ nav {
         0 14px;
 
     border: 0;
+
     border-radius: 13px;
 
     color:
@@ -692,6 +764,7 @@ nav {
     background: transparent;
 
     font-family: inherit;
+
     font-size: .79rem;
     font-weight: 600;
 
@@ -714,7 +787,8 @@ nav {
 }
 
 .nav-pages a:active {
-    transform: scale(.96);
+    transform:
+        scale(.96);
 }
 
 .nav-pages a.active {
@@ -729,9 +803,10 @@ nav {
 .theme-pill {
     position: relative;
 
-    display: inline-flex;
+    display: flex;
+    align-items: center;
 
-    padding: 6px;
+    padding: 5px;
 
     border:
         1px solid rgba(255,255,255,.14);
@@ -741,8 +816,8 @@ nav {
     background:
         linear-gradient(
             135deg,
-            rgba(255,255,255,.105),
-            rgba(255,255,255,.035)
+            rgba(255,255,255,.095),
+            rgba(255,255,255,.028)
         );
 
     backdrop-filter:
@@ -754,10 +829,17 @@ nav {
         saturate(180%);
 
     box-shadow:
-        0 20px 55px rgba(0,0,0,.42),
-        0 4px 18px rgba(0,0,0,.12),
-        inset 0 1px 0 rgba(255,255,255,.12),
-        inset 0 -1px 0 rgba(0,0,0,.12);
+        0 20px 55px
+        rgba(0,0,0,.44),
+
+        0 4px 18px
+        rgba(0,0,0,.10),
+
+        inset 0 1px 0
+        rgba(255,255,255,.11),
+
+        inset 0 -1px 0
+        rgba(0,0,0,.10);
 
     touch-action: manipulation;
 }
@@ -766,9 +848,10 @@ nav {
     height: 34px;
 
     padding:
-        0 14px;
+        0 13px;
 
     border: 0;
+
     border-radius: 13px;
 
     color:
@@ -778,6 +861,7 @@ nav {
         rgba(255,255,255,.035);
 
     font-family: inherit;
+
     font-size: .76rem;
     font-weight: 600;
 
@@ -827,7 +911,10 @@ body.page-leaving .footer {
 ========================================= */
 
 .footer {
-    padding: 25px 0 35px;
+    padding:
+        25px
+        0
+        35px;
 
     color:
         rgba(255,255,255,.55);
@@ -848,7 +935,9 @@ body.page-leaving .footer {
 
 .footer.visible {
     opacity: 1;
-    transform: translateY(0);
+
+    transform:
+        translateY(0);
 }
 
 
@@ -894,8 +983,8 @@ body.light .theme-pill {
     background:
         linear-gradient(
             135deg,
-            rgba(255,255,255,.13),
-            rgba(255,255,255,.05)
+            rgba(255,255,255,.12),
+            rgba(255,255,255,.04)
         );
 }
 
@@ -938,12 +1027,14 @@ body.light .nav-pages::before {
 @keyframes fadeUp {
     from {
         opacity: 0;
+
         transform:
             translateY(20px);
     }
 
     to {
         opacity: 1;
+
         transform:
             translateY(0);
     }
@@ -974,12 +1065,14 @@ body.light .nav-pages::before {
 @keyframes pageOut {
     from {
         opacity: 1;
+
         transform:
             translateY(0);
     }
 
     to {
         opacity: 0;
+
         transform:
             translateY(-10px);
     }
@@ -1045,7 +1138,9 @@ body.light .nav-pages::before {
             650px;
 
         padding:
-            110px 8px 80px;
+            110px
+            8px
+            80px;
     }
 
     .hero h1 {
@@ -1058,13 +1153,18 @@ body.light .nav-pages::before {
     }
 
     .hero p {
-        font-size: .94rem;
-        line-height: 1.72;
+        font-size:
+            .94rem;
+
+        line-height:
+            1.72;
     }
 
     .buttons {
         width: 100%;
-        flex-direction: column;
+
+        flex-direction:
+            column;
     }
 
     .buttons a {
@@ -1073,6 +1173,7 @@ body.light .nav-pages::before {
 
     .card {
         padding: 24px;
+
         border-radius: 21px;
     }
 
@@ -1085,32 +1186,47 @@ body.light .nav-pages::before {
     }
 
     nav {
-        bottom: 12px;
+        bottom: 10px;
+
         gap: 5px;
+
+        max-width:
+            calc(100vw - 14px);
     }
 
     .nav-pages {
-        padding: 5px;
+        padding: 4px;
+
+        border-radius: 17px;
     }
 
     .nav-pages::before {
-        top: var(--slider-y, 5px);
+        top:
+            var(--slider-y, 4px);
     }
 
     .nav-pages a {
         height: 32px;
-        padding: 0 10px;
-        font-size: .72rem;
+
+        padding:
+            0 9px;
+
+        font-size: .70rem;
     }
 
     .theme-pill {
-        padding: 5px;
+        padding: 4px;
+
+        border-radius: 17px;
     }
 
     .theme-button {
         height: 32px;
-        padding: 0 10px;
-        font-size: .7rem;
+
+        padding:
+            0 10px;
+
+        font-size: .69rem;
     }
 }
 
