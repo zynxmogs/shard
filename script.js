@@ -23,6 +23,7 @@
     ========================================= */
 
     function applyTheme(theme) {
+
         const isLight =
             theme === "light";
 
@@ -41,9 +42,11 @@
 
 
     function loadTheme() {
+
         let theme = "dark";
 
         try {
+
             const saved =
                 localStorage.getItem(
                     THEME_KEY
@@ -55,9 +58,8 @@
             ) {
                 theme = saved;
             }
-        } catch {
-            theme = "dark";
-        }
+
+        } catch {}
 
         applyTheme(theme);
     }
@@ -92,9 +94,11 @@
 
 
     if (themeButton) {
+
         themeButton.addEventListener(
             "click",
             event => {
+
                 event.preventDefault();
                 event.stopPropagation();
 
@@ -188,6 +192,7 @@
                         )
                     ) === page
                 );
+
             })
             || navLinks[0]
         );
@@ -211,12 +216,26 @@
             return null;
         }
 
+        const navRect =
+            navPages.getBoundingClientRect();
+
+        const linkRect =
+            link.getBoundingClientRect();
+
         return {
             left:
-                link.offsetLeft,
+                linkRect.left -
+                navRect.left,
+
+            top:
+                linkRect.top -
+                navRect.top,
 
             width:
-                link.offsetWidth
+                linkRect.width,
+
+            height:
+                linkRect.height
         };
     }
 
@@ -241,6 +260,7 @@
         }
 
         if (!animated) {
+
             navPages.classList.add(
                 "slider-static"
             );
@@ -252,8 +272,18 @@
         );
 
         navPages.style.setProperty(
+            "--slider-y",
+            `${metrics.top}px`
+        );
+
+        navPages.style.setProperty(
             "--slider-width",
             `${metrics.width}px`
+        );
+
+        navPages.style.setProperty(
+            "--slider-height",
+            `${metrics.height}px`
         );
 
         if (!animated) {
@@ -284,7 +314,8 @@
             );
         });
 
-        activeLink = link;
+        activeLink =
+            link;
 
         setSlider(
             link,
@@ -293,9 +324,9 @@
     }
 
 
-    /*
-        Place it instantly after layout is ready.
-    */
+    /* =========================================
+       INITIALIZATION
+    ========================================= */
 
     function initializeSlider() {
 
@@ -317,7 +348,9 @@
         document.fonts.ready.then(() => {
 
             requestAnimationFrame(() => {
+
                 initializeSlider();
+
             });
 
         });
@@ -332,13 +365,15 @@
 
 
     /* =========================================
-       DRAG
+       DRAGGING
     ========================================= */
 
     let dragging = false;
+
     let pointerId = null;
 
     let startX = 0;
+
     let moved = false;
 
     let dragTarget = null;
@@ -347,6 +382,7 @@
     function closestLink(x) {
 
         let closest = null;
+
         let smallest =
             Infinity;
 
@@ -367,8 +403,12 @@
             if (
                 distance < smallest
             ) {
-                smallest = distance;
-                closest = link;
+
+                smallest =
+                    distance;
+
+                closest =
+                    link;
             }
         });
 
@@ -398,13 +438,19 @@
         const rect =
             target.getBoundingClientRect();
 
-        const targetLeft =
+        const baseLeft =
             rect.left -
-            navRect.left -
-            6;
+            navRect.left;
 
-        const targetWidth =
+        const baseTop =
+            rect.top -
+            navRect.top;
+
+        const baseWidth =
             rect.width;
+
+        const baseHeight =
+            rect.height;
 
         const center =
             rect.left +
@@ -419,25 +465,21 @@
                 Math.abs(distance) * .14
             );
 
-        let left =
-            targetLeft -
-            stretch / 2;
-
         const width =
-            targetWidth +
+            baseWidth +
             stretch;
 
-        const maxLeft =
-            navPages.clientWidth -
-            width -
-            12;
+        let left =
+            baseLeft -
+            stretch / 2;
 
         left =
             Math.max(
                 0,
                 Math.min(
                     left,
-                    maxLeft
+                    navPages.clientWidth -
+                    width
                 )
             );
 
@@ -447,8 +489,18 @@
         );
 
         navPages.style.setProperty(
+            "--slider-y",
+            `${baseTop}px`
+        );
+
+        navPages.style.setProperty(
             "--slider-width",
             `${width}px`
+        );
+
+        navPages.style.setProperty(
+            "--slider-height",
+            `${baseHeight}px`
         );
 
         navLinks.forEach(link => {
@@ -468,7 +520,8 @@
             event => {
 
                 if (
-                    event.pointerType === "mouse" &&
+                    event.pointerType ===
+                        "mouse" &&
                     event.button !== 0
                 ) {
                     return;
@@ -632,6 +685,7 @@
             event => {
 
                 if (moved) {
+
                     event.preventDefault();
 
                     moved = false;
@@ -658,7 +712,9 @@
                 }
 
                 const destination =
-                    normalizeHref(href);
+                    normalizeHref(
+                        href
+                    );
 
                 if (
                     destination ===
@@ -681,11 +737,6 @@
                     link,
                     true
                 );
-
-                /*
-                    Only the page content fades.
-                    The navigation stays fixed.
-                */
 
                 document.body.classList.add(
                     "page-leaving"
@@ -729,6 +780,7 @@
                     );
 
                 });
+
             });
         }
     );
@@ -793,6 +845,7 @@
                         entry.target
                     );
                 });
+
             },
             {
                 threshold: .12,
@@ -838,23 +891,37 @@
                     Object.assign(
                         ripple.style,
                         {
-                            position: "absolute",
-                            width: `${size}px`,
-                            height: `${size}px`,
-                            left: `${
-                                event.clientX -
-                                rect.left -
-                                size / 2
-                            }px`,
-                            top: `${
-                                event.clientY -
-                                rect.top -
-                                size / 2
-                            }px`,
-                            borderRadius: "50%",
+                            position:
+                                "absolute",
+
+                            width:
+                                `${size}px`,
+
+                            height:
+                                `${size}px`,
+
+                            left:
+                                `${
+                                    event.clientX -
+                                    rect.left -
+                                    size / 2
+                                }px`,
+
+                            top:
+                                `${
+                                    event.clientY -
+                                    rect.top -
+                                    size / 2
+                                }px`,
+
+                            borderRadius:
+                                "50%",
+
                             background:
                                 "rgba(255,255,255,.24)",
-                            pointerEvents: "none"
+
+                            pointerEvents:
+                                "none"
                         }
                     );
 
@@ -867,16 +934,19 @@
                             {
                                 transform:
                                     "scale(0)",
+
                                 opacity: .75
                             },
                             {
                                 transform:
                                     "scale(2)",
+
                                 opacity: 0
                             }
                         ],
                         {
                             duration: 600,
+
                             easing:
                                 "cubic-bezier(.22,1,.36,1)"
                         }
@@ -906,7 +976,8 @@
         event => {
 
             if (
-                event.pointerType === "touch"
+                event.pointerType ===
+                    "touch"
             ) {
                 return;
             }
@@ -931,10 +1002,12 @@
     function animateBackground() {
 
         currentX +=
-            (targetX - currentX) * .018;
+            (targetX - currentX) *
+            .018;
 
         currentY +=
-            (targetY - currentY) * .018;
+            (targetY - currentY) *
+            .018;
 
         document.body.style.backgroundPosition =
             `${currentX * 7}px ${currentY * 7}px`;
