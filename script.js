@@ -35,8 +35,8 @@
         if (themeButton) {
             themeButton.textContent =
                 isLight
-                    ? "Dark"
-                    : "Light";
+                    ? "☀"
+                    : "☾";
         }
     }
 
@@ -67,25 +67,30 @@
 
     function toggleTheme() {
 
-        const current =
+        const next =
             document.body.classList.contains(
                 "light"
             )
-                ? "light"
-                : "dark";
-
-        const next =
-            current === "light"
                 ? "dark"
                 : "light";
 
-        try {
+        if (themeButton) {
+            themeButton.classList.remove(
+                "switching"
+            );
 
+            void themeButton.offsetWidth;
+
+            themeButton.classList.add(
+                "switching"
+            );
+        }
+
+        try {
             localStorage.setItem(
                 THEME_KEY,
                 next
             );
-
         } catch {}
 
         applyTheme(next);
@@ -202,7 +207,7 @@
 
 
     /* =========================================
-       SLIDER GEOMETRY
+       SLIDER
     ========================================= */
 
     let activeLink =
@@ -262,7 +267,6 @@
         }
 
         if (!animated) {
-
             navPages.classList.add(
                 "slider-static"
             );
@@ -286,6 +290,16 @@
         navPages.style.setProperty(
             "--slider-height",
             `${metrics.height}px`
+        );
+
+        navPages.style.setProperty(
+            "--slider-blur",
+            "0px"
+        );
+
+        navPages.style.setProperty(
+            "--slider-scale",
+            "1"
         );
 
         if (!animated) {
@@ -326,10 +340,6 @@
     }
 
 
-    /* =========================================
-       INITIAL SLIDER POSITION
-    ========================================= */
-
     function initializeSlider() {
 
         const current =
@@ -351,50 +361,53 @@
     }
 
 
-    if (
-        document.fonts &&
-        document.fonts.ready
-    ) {
+    function initializeAfterLayout() {
 
-        document.fonts.ready.then(() => {
+        if (
+            document.fonts &&
+            document.fonts.ready
+        ) {
 
-            requestAnimationFrame(() => {
-                initializeSlider();
+            document.fonts.ready.then(() => {
+
+                requestAnimationFrame(() => {
+                    initializeSlider();
+                });
+
             });
 
-        });
+        } else {
 
-    } else {
-
-        window.addEventListener(
-            "load",
-            initializeSlider
-        );
+            window.addEventListener(
+                "load",
+                initializeSlider,
+                {
+                    once: true
+                }
+            );
+        }
     }
 
 
+    initializeAfterLayout();
+
+
     /* =========================================
-       DRAG STATE
+       DRAGGING
     ========================================= */
 
     let dragging = false;
     let pointerId = null;
 
     let startX = 0;
-
     let moved = false;
 
     let dragTarget = null;
 
 
-    /* =========================================
-       FIND CLOSEST TAB
-    ========================================= */
-
     function closestLink(x) {
 
         let closest = null;
-
         let smallest =
             Infinity;
 
@@ -428,10 +441,6 @@
     }
 
 
-    /* =========================================
-       DRAG UPDATE
-    ========================================= */
-
     function updateDrag(x) {
 
         if (!navPages) {
@@ -455,11 +464,6 @@
             return;
         }
 
-        /*
-            Keep the pill exactly aligned with
-            the selected link while dragging.
-        */
-
         navPages.style.setProperty(
             "--slider-x",
             `${metrics.left}px`
@@ -480,6 +484,17 @@
             `${metrics.height}px`
         );
 
+        navPages.style.setProperty(
+            "--slider-blur",
+            "0.35px"
+        );
+
+        navPages.style.setProperty(
+            "--slider-scale",
+            "1.015"
+        );
+
+
         navLinks.forEach(link => {
 
             link.classList.toggle(
@@ -489,10 +504,6 @@
         });
     }
 
-
-    /* =========================================
-       POINTER DOWN
-    ========================================= */
 
     if (navPages) {
 
@@ -537,10 +548,6 @@
         );
 
 
-        /* =====================================
-           POINTER MOVE
-        ===================================== */
-
         navPages.addEventListener(
             "pointermove",
             event => {
@@ -569,10 +576,6 @@
         );
 
 
-        /* =====================================
-           POINTER UP
-        ===================================== */
-
         function finishDrag(event) {
 
             if (
@@ -595,6 +598,7 @@
 
             pointerId = null;
 
+
             const selected =
                 dragTarget;
 
@@ -608,15 +612,12 @@
                 return;
             }
 
+
             setActive(
                 selected,
                 true
             );
 
-
-            /*
-                Navigate only after a genuine drag.
-            */
 
             if (
                 moved &&
@@ -662,7 +663,7 @@
 
 
     /* =========================================
-       NORMAL CLICK NAVIGATION
+       NORMAL NAVIGATION
     ========================================= */
 
     navLinks.forEach(link => {
@@ -670,11 +671,6 @@
         link.addEventListener(
             "click",
             event => {
-
-                /*
-                    Prevent the click generated after
-                    a drag from navigating twice.
-                */
 
                 if (moved) {
 
@@ -695,12 +691,8 @@
                 }
 
                 if (
-                    href.startsWith(
-                        "http://"
-                    ) ||
-                    href.startsWith(
-                        "https://"
-                    ) ||
+                    href.startsWith("http://") ||
+                    href.startsWith("https://") ||
                     href.startsWith("//") ||
                     href.startsWith("#")
                 ) {
@@ -708,7 +700,9 @@
                 }
 
                 const destination =
-                    normalizeHref(href);
+                    normalizeHref(
+                        href
+                    );
 
 
                 if (
@@ -726,6 +720,7 @@
                     return;
                 }
 
+
                 event.preventDefault();
 
                 setActive(
@@ -737,11 +732,6 @@
                     "page-leaving"
                 );
 
-
-                /*
-                    Keep the navigation on screen
-                    while the content changes.
-                */
 
                 setTimeout(() => {
 
@@ -772,16 +762,30 @@
 
                 requestAnimationFrame(() => {
 
-                    const current =
-                        getCurrentLink();
+                    if (
+                        document.fonts &&
+                        document.fonts.ready
+                    ) {
 
-                    setActive(
-                        current,
-                        false
-                    );
+                        document.fonts.ready.then(
+                            () => {
 
+                                setActive(
+                                    getCurrentLink(),
+                                    false
+                                );
+
+                            }
+                        );
+
+                    } else {
+
+                        setActive(
+                            getCurrentLink(),
+                            false
+                        );
+                    }
                 });
-
             });
         }
     );
@@ -804,11 +808,8 @@
             resizeTimer =
                 setTimeout(() => {
 
-                    const current =
-                        getCurrentLink();
-
                     setActive(
-                        current,
+                        getCurrentLink(),
                         false
                     );
 
@@ -859,166 +860,5 @@
     revealElements.forEach(element => {
         observer.observe(element);
     });
-
-
-    /* =========================================
-       BUTTON RIPPLE
-    ========================================= */
-
-    document
-        .querySelectorAll(
-            ".buttons a"
-        )
-        .forEach(button => {
-
-            button.addEventListener(
-                "pointerdown",
-                event => {
-
-                    const rect =
-                        button.getBoundingClientRect();
-
-                    const size =
-                        Math.max(
-                            rect.width,
-                            rect.height
-                        );
-
-                    const ripple =
-                        document.createElement(
-                            "span"
-                        );
-
-                    Object.assign(
-                        ripple.style,
-                        {
-                            position:
-                                "absolute",
-
-                            width:
-                                `${size}px`,
-
-                            height:
-                                `${size}px`,
-
-                            left:
-                                `${
-                                    event.clientX -
-                                    rect.left -
-                                    size / 2
-                                }px`,
-
-                            top:
-                                `${
-                                    event.clientY -
-                                    rect.top -
-                                    size / 2
-                                }px`,
-
-                            borderRadius:
-                                "50%",
-
-                            background:
-                                "rgba(255,255,255,.24)",
-
-                            pointerEvents:
-                                "none"
-                        }
-                    );
-
-                    button.appendChild(
-                        ripple
-                    );
-
-                    ripple.animate(
-                        [
-                            {
-                                transform:
-                                    "scale(0)",
-
-                                opacity: .75
-                            },
-                            {
-                                transform:
-                                    "scale(2)",
-
-                                opacity: 0
-                            }
-                        ],
-                        {
-                            duration: 600,
-
-                            easing:
-                                "cubic-bezier(.22,1,.36,1)"
-                        }
-                    );
-
-                    setTimeout(() => {
-                        ripple.remove();
-                    }, 650);
-                }
-            );
-        });
-
-
-    /* =========================================
-       BACKGROUND PARALLAX
-    ========================================= */
-
-    let targetX = 0;
-    let targetY = 0;
-
-    let currentX = 0;
-    let currentY = 0;
-
-
-    window.addEventListener(
-        "pointermove",
-        event => {
-
-            if (
-                event.pointerType ===
-                    "touch"
-            ) {
-                return;
-            }
-
-            targetX =
-                (
-                    event.clientX /
-                    window.innerWidth -
-                    .5
-                ) * 2;
-
-            targetY =
-                (
-                    event.clientY /
-                    window.innerHeight -
-                    .5
-                ) * 2;
-        }
-    );
-
-
-    function animateBackground() {
-
-        currentX +=
-            (targetX - currentX) *
-            .018;
-
-        currentY +=
-            (targetY - currentY) *
-            .018;
-
-        document.body.style.backgroundPosition =
-            `${currentX * 7}px ${currentY * 7}px`;
-
-        requestAnimationFrame(
-            animateBackground
-        );
-    }
-
-
-    animateBackground();
 
 })();
