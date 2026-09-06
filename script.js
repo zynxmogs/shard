@@ -4,76 +4,68 @@
     document.addEventListener("DOMContentLoaded", () => {
         const body = document.body;
 
-        const pageNav = document.getElementById("pageNav");
-        const slider = document.getElementById("navSlider");
-        const themeToggle = document.getElementById("themeToggle");
+        const pageNav =
+            document.getElementById("pageNav");
+
+        const slider =
+            document.getElementById("navSlider");
+
+        const themeToggle =
+            document.getElementById("themeToggle");
 
         const links = pageNav
             ? [...pageNav.querySelectorAll("a[data-page]")]
             : [];
 
-        /* =========================================
+        /* =====================================================
            THEME
-        ========================================= */
+        ===================================================== */
 
         const THEME_KEY = "shard-theme";
 
-        function savedTheme() {
-            return localStorage.getItem(THEME_KEY) === "light";
+        function isLightTheme() {
+            return (
+                localStorage.getItem(THEME_KEY) ===
+                "light"
+            );
         }
 
-        function applyTheme(isLight) {
-            body.classList.toggle("light", isLight);
+        function applyTheme(light) {
+            body.classList.toggle(
+                "light",
+                light
+            );
 
             localStorage.setItem(
                 THEME_KEY,
-                isLight ? "light" : "dark"
+                light ? "light" : "dark"
             );
         }
 
-        applyTheme(savedTheme());
+        applyTheme(isLightTheme());
 
-        function switchTheme(event) {
-            if (!themeToggle) return;
+        function switchTheme() {
+            if (!themeToggle) {
+                return;
+            }
 
-            const goingLight =
+            const nextLight =
                 !body.classList.contains("light");
 
-            const rect =
-                themeToggle.getBoundingClientRect();
-
-            const x =
-                event?.clientX ??
-                rect.left + rect.width / 2;
-
-            const y =
-                event?.clientY ??
-                rect.top + rect.height / 2;
-
-            const overlay =
+            const flash =
                 document.createElement("div");
 
-            overlay.className =
-                "theme-transition";
+            flash.className =
+                "theme-flash";
 
-            overlay.style.setProperty(
-                "--transition-x",
-                `${x}px`
+            flash.style.setProperty(
+                "--flash-color",
+                nextLight
+                    ? "#f4f4f6"
+                    : "#080708"
             );
 
-            overlay.style.setProperty(
-                "--transition-y",
-                `${y}px`
-            );
-
-            overlay.style.setProperty(
-                "--transition-color",
-                goingLight
-                    ? "#f3f3f5"
-                    : "#050506"
-            );
-
-            body.appendChild(overlay);
+            body.appendChild(flash);
 
             themeToggle.animate(
                 [
@@ -83,11 +75,11 @@
                     },
                     {
                         transform:
-                            "scale(.82) rotate(-10deg)"
+                            "scale(.88) rotate(-7deg)"
                     },
                     {
                         transform:
-                            "scale(1.08) rotate(7deg)"
+                            "scale(1.06) rotate(5deg)"
                     },
                     {
                         transform:
@@ -95,23 +87,24 @@
                     }
                 ],
                 {
-                    duration: 560,
+                    duration: 430,
                     easing:
                         "cubic-bezier(.22,1,.36,1)"
                 }
             );
 
-            requestAnimationFrame(() => {
-                applyTheme(goingLight);
-
-                requestAnimationFrame(() => {
-                    overlay.classList.add("active");
-                });
-            });
+            /*
+             * Change the actual theme shortly after
+             * the transition begins. No huge circle,
+             * no black screen and no clipped page.
+             */
+            window.setTimeout(() => {
+                applyTheme(nextLight);
+            }, 70);
 
             window.setTimeout(() => {
-                overlay.remove();
-            }, 850);
+                flash.remove();
+            }, 470);
         }
 
         if (themeToggle) {
@@ -121,16 +114,13 @@
             );
         }
 
-        /* =========================================
-           PAGE DETECTION
-        ========================================= */
+        /* =====================================================
+           CURRENT PAGE
+        ===================================================== */
 
-        function currentPage() {
-            const pathname =
-                window.location.pathname;
-
+        function getCurrentPage() {
             let page =
-                pathname
+                window.location.pathname
                     .split("/")
                     .pop()
                     .toLowerCase();
@@ -142,72 +132,138 @@
             return page;
         }
 
-        function findCurrentIndex() {
-            const page = currentPage();
+        function getCurrentIndex() {
+            const current =
+                getCurrentPage();
 
-            const index =
+            const found =
                 links.findIndex(link => {
-                    const linkPage =
-                        link
-                            .getAttribute("data-page")
-                            ?.toLowerCase();
-
-                    return linkPage === page;
+                    return (
+                        (
+                            link.dataset.page ||
+                            ""
+                        ).toLowerCase() ===
+                        current
+                    );
                 });
 
-            return index >= 0 ? index : 0;
+            return found >= 0
+                ? found
+                : 0;
         }
 
-        /* =========================================
-           SLIDER
-        ========================================= */
+        /* =====================================================
+           SLIDER GEOMETRY
+        ===================================================== */
 
         let activeIndex =
-            findCurrentIndex();
+            getCurrentIndex();
 
-        function setSlider(
+        function getSliderGeometry() {
+            if (!pageNav) {
+                return null;
+            }
+
+            const navRect =
+                pageNav.getBoundingClientRect();
+
+            const style =
+                window.getComputedStyle(
+                    pageNav
+                );
+
+            const paddingLeft =
+                parseFloat(
+                    style.paddingLeft
+                ) || 0;
+
+            const paddingRight =
+                parseFloat(
+                    style.paddingRight
+                ) || 0;
+
+            const innerWidth =
+                navRect.width -
+                paddingLeft -
+                paddingRight;
+
+            const cellWidth =
+                innerWidth /
+                links.length;
+
+            return {
+                cellWidth,
+                left: paddingLeft,
+                top:
+                    parseFloat(
+                        style.paddingTop
+                    ) || 0
+            };
+        }
+
+        /*
+         * The slider is positioned using PIXELS, not
+         * percentage transforms. This prevents it from
+         * escaping the pill on different screen widths.
+         */
+
+        function setSliderPosition(
             index,
-            instant = false
+            options = {}
         ) {
-            if (!slider || !pageNav) {
+            if (!pageNav || !slider) {
                 return;
             }
 
-            activeIndex = Math.max(
-                0,
-                Math.min(
-                    index,
-                    links.length - 1
-                )
-            );
+            const {
+                instant = false,
+                dragX = 0,
+                scale = 1
+            } = options;
 
-            if (instant) {
-                slider.style.transition =
-                    "none";
-            } else {
-                slider.style.transition = "";
+            const geometry =
+                getSliderGeometry();
+
+            if (!geometry) {
+                return;
             }
 
-            pageNav.style.setProperty(
-                "--slider-position",
-                activeIndex
-            );
+            activeIndex =
+                Math.max(
+                    0,
+                    Math.min(
+                        index,
+                        links.length - 1
+                    )
+                );
 
-            pageNav.style.setProperty(
-                "--drag-x",
-                "0px"
-            );
+            const x =
+                geometry.cellWidth *
+                activeIndex;
 
-            pageNav.style.setProperty(
-                "--slider-scale",
-                "1"
-            );
+            slider.style.width =
+                `${geometry.cellWidth}px`;
+
+            slider.style.height =
+                `${Math.max(
+                    0,
+                    pageNav.clientHeight -
+                        geometry.top * 2
+                )}px`;
+
+            slider.style.transform =
+                `translate3d(${x + dragX}px, 0, 0) scaleX(${scale})`;
+
+            slider.style.transition =
+                instant
+                    ? "none"
+                    : "";
 
             links.forEach(
-                (link, index) => {
+                (link, i) => {
                     link.classList.toggle(
                         "active",
-                        index === activeIndex
+                        i === activeIndex
                     );
                 }
             );
@@ -220,47 +276,23 @@
             }
         }
 
-        setSlider(
+        setSliderPosition(
             activeIndex,
-            true
+            { instant: true }
         );
 
-        /* =========================================
-           TOUCH DRAG
-        ========================================= */
+        /* =====================================================
+           DRAG
+        ===================================================== */
 
         let dragging = false;
         let pointerId = null;
-        let startX = 0;
-        let startIndex = 0;
-        let latestX = 0;
-        let didDrag = false;
 
-        function cellWidth() {
-            if (!pageNav) return 1;
+        let dragStartX = 0;
+        let dragLatestX = 0;
 
-            const rect =
-                pageNav.getBoundingClientRect();
-
-            const computed =
-                getComputedStyle(pageNav);
-
-            const leftPadding =
-                parseFloat(
-                    computed.paddingLeft
-                ) || 0;
-
-            const rightPadding =
-                parseFloat(
-                    computed.paddingRight
-                ) || 0;
-
-            return (
-                rect.width -
-                leftPadding -
-                rightPadding
-            ) / links.length;
-        }
+        let dragStartIndex = 0;
+        let dragged = false;
 
         function clamp(
             value,
@@ -273,38 +305,141 @@
             );
         }
 
-        function updateDrag(x) {
-            if (!pageNav || !slider) {
+        function beginDrag(event) {
+            if (
+                !pageNav ||
+                links.length === 0
+            ) {
                 return;
             }
 
-            latestX = x;
+            /*
+             * Mouse clicks should behave like normal
+             * navigation. Touch and pen get dragging.
+             */
+            if (
+                event.pointerType === "mouse"
+            ) {
+                return;
+            }
+
+            dragging = true;
+            dragged = false;
+
+            pointerId =
+                event.pointerId;
+
+            dragStartX =
+                event.clientX;
+
+            dragLatestX =
+                event.clientX;
+
+            dragStartIndex =
+                activeIndex;
+
+            pageNav.classList.add(
+                "dragging"
+            );
+
+            pageNav.setPointerCapture(
+                pointerId
+            );
+        }
+
+        function moveDrag(event) {
+            if (
+                !dragging ||
+                event.pointerId !== pointerId
+            ) {
+                return;
+            }
+
+            dragLatestX =
+                event.clientX;
 
             const dx =
-                x - startX;
+                dragLatestX -
+                dragStartX;
 
-            if (Math.abs(dx) > 6) {
-                didDrag = true;
+            if (
+                Math.abs(dx) > 6
+            ) {
+                dragged = true;
+            }
+
+            const geometry =
+                getSliderGeometry();
+
+            if (!geometry) {
+                return;
             }
 
             const width =
-                cellWidth();
+                geometry.cellWidth;
 
-            let movement =
-                dx / width;
+            /*
+             * Calculate the exact absolute slider
+             * position rather than adding nested
+             * percentage transforms.
+             */
+            const rawPosition =
+                dragStartIndex * width +
+                dx;
 
-            let floatingIndex =
-                startIndex + movement;
+            const minPosition = 0;
 
-            floatingIndex =
+            const maxPosition =
+                width *
+                (links.length - 1);
+
+            /*
+             * Small resistance when pulling past
+             * either edge.
+             */
+            let position;
+
+            if (
+                rawPosition < minPosition
+            ) {
+                position =
+                    minPosition +
+                    (
+                        rawPosition -
+                        minPosition
+                    ) *
+                    0.25;
+            } else if (
+                rawPosition >
+                maxPosition
+            ) {
+                position =
+                    maxPosition +
+                    (
+                        rawPosition -
+                        maxPosition
+                    ) *
+                    0.25;
+            } else {
+                position = rawPosition;
+            }
+
+            const safePosition =
                 clamp(
-                    floatingIndex,
-                    -0.18,
-                    links.length - 0.82
+                    position,
+                    -width * 0.22,
+                    maxPosition +
+                        width * 0.22
                 );
 
+            /*
+             * Keep the visual active state synchronized
+             * while dragging.
+             */
             let visualIndex =
-                Math.round(floatingIndex);
+                Math.round(
+                    safePosition / width
+                );
 
             visualIndex =
                 clamp(
@@ -312,47 +447,6 @@
                     0,
                     links.length - 1
                 );
-
-            const nearest =
-                Math.round(
-                    floatingIndex
-                );
-
-            const base =
-                clamp(
-                    nearest,
-                    0,
-                    links.length - 1
-                );
-
-            const remainder =
-                dx -
-                (base - startIndex) * width;
-
-            const maxDrag =
-                width * 0.95;
-
-            const limited =
-                clamp(
-                    remainder,
-                    -maxDrag,
-                    maxDrag
-                );
-
-            pageNav.style.setProperty(
-                "--slider-position",
-                base
-            );
-
-            pageNav.style.setProperty(
-                "--drag-x",
-                `${limited}px`
-            );
-
-            pageNav.style.setProperty(
-                "--slider-scale",
-                "1.055"
-            );
 
             links.forEach(
                 (link, index) => {
@@ -362,10 +456,30 @@
                     );
                 }
             );
+
+            const scale =
+                Math.abs(dx) > 5
+                    ? 1.035
+                    : 1;
+
+            slider.style.transition =
+                "none";
+
+            slider.style.transform =
+                `translate3d(${safePosition}px, 0, 0) scaleX(${scale})`;
         }
 
-        function finishDrag() {
-            if (!dragging) return;
+        function endDrag(event) {
+            if (
+                !dragging ||
+                (
+                    event &&
+                    event.pointerId !==
+                        pointerId
+                )
+            ) {
+                return;
+            }
 
             dragging = false;
 
@@ -373,22 +487,49 @@
                 "dragging"
             );
 
-            const width =
-                cellWidth();
+            const geometry =
+                getSliderGeometry();
 
-            const totalDx =
-                latestX - startX;
+            if (!geometry) {
+                pointerId = null;
+                return;
+            }
+
+            const dx =
+                dragLatestX -
+                dragStartX;
+
+            const width =
+                geometry.cellWidth;
 
             let target =
-                startIndex;
+                dragStartIndex;
 
+            /*
+             * A moderate swipe changes the tab.
+             * Small movements snap back.
+             */
             if (
-                Math.abs(totalDx) >
-                width * 0.2
+                Math.abs(dx) >
+                width * 0.22
             ) {
                 target =
-                    startIndex +
-                    (totalDx > 0 ? 1 : -1);
+                    dragStartIndex +
+                    (
+                        dx > 0
+                            ? 1
+                            : -1
+                    );
+            } else {
+                target =
+                    Math.round(
+                        (
+                            dragStartIndex *
+                                width +
+                            dx
+                        ) /
+                        width
+                    );
             }
 
             target =
@@ -398,168 +539,250 @@
                     links.length - 1
                 );
 
-            setSlider(
+            activeIndex = target;
+
+            setSliderPosition(
                 target,
-                false
+                {
+                    instant: false
+                }
             );
 
+            pointerId = null;
+
             if (
-                didDrag &&
+                dragged &&
                 links[target]
             ) {
-                const href =
+                const destination =
                     links[target].href;
 
                 window.setTimeout(() => {
                     window.location.href =
-                        href;
+                        destination;
                 }, 250);
             }
 
-            pointerId = null;
-
             window.setTimeout(() => {
-                didDrag = false;
-            }, 40);
+                dragged = false;
+            }, 50);
         }
 
         if (pageNav) {
             pageNav.addEventListener(
                 "pointerdown",
-                event => {
-                    if (
-                        event.pointerType ===
-                        "mouse"
-                    ) {
-                        return;
-                    }
-
-                    dragging = true;
-                    didDrag = false;
-
-                    pointerId =
-                        event.pointerId;
-
-                    startX =
-                        event.clientX;
-
-                    latestX =
-                        event.clientX;
-
-                    startIndex =
-                        activeIndex;
-
-                    pageNav.classList.add(
-                        "dragging"
-                    );
-
-                    pageNav.setPointerCapture(
-                        pointerId
-                    );
-                }
+                beginDrag
             );
 
             pageNav.addEventListener(
                 "pointermove",
-                event => {
-                    if (
-                        !dragging ||
-                        event.pointerId !==
-                            pointerId
-                    ) {
-                        return;
-                    }
-
-                    updateDrag(
-                        event.clientX
-                    );
-                }
+                moveDrag
             );
 
             pageNav.addEventListener(
                 "pointerup",
-                event => {
-                    if (
-                        event.pointerId !==
-                        pointerId
-                    ) {
-                        return;
-                    }
-
-                    finishDrag();
-                }
+                endDrag
             );
 
             pageNav.addEventListener(
                 "pointercancel",
-                finishDrag
+                endDrag
             );
         }
 
-        /* =========================================
+        /* =====================================================
            CLICK NAVIGATION
-        ========================================= */
+        ===================================================== */
 
-        links.forEach((link, index) => {
-            link.addEventListener(
-                "click",
-                event => {
-                    if (didDrag) {
+        links.forEach(
+            (link, index) => {
+                link.addEventListener(
+                    "click",
+                    event => {
+                        /*
+                         * A touch swipe creates a click after
+                         * release in some browsers. Ignore it.
+                         */
+                        if (dragged) {
+                            event.preventDefault();
+                            return;
+                        }
+
+                        if (
+                            index ===
+                            activeIndex
+                        ) {
+                            event.preventDefault();
+                            return;
+                        }
+
                         event.preventDefault();
-                        return;
+
+                        const destination =
+                            link.href;
+
+                        setSliderPosition(
+                            index,
+                            {
+                                instant: false
+                            }
+                        );
+
+                        window.setTimeout(() => {
+                            window.location.href =
+                                destination;
+                        }, 250);
                     }
-
-                    const destination =
-                        link.href;
-
-                    if (
-                        index === activeIndex
-                    ) {
-                        event.preventDefault();
-                        return;
-                    }
-
-                    event.preventDefault();
-
-                    setSlider(
-                        index,
-                        false
-                    );
-
-                    window.setTimeout(() => {
-                        window.location.href =
-                            destination;
-                    }, 250);
-                }
-            );
-        });
-
-        /* =========================================
-           RESIZE
-        ========================================= */
-
-        window.addEventListener(
-            "resize",
-            () => {
-                setSlider(
-                    activeIndex,
-                    true
                 );
             }
         );
 
-        /* =========================================
-           BFCACHE / PAGE RETURN
-        ========================================= */
+        /* =====================================================
+           RIPPLE
+        ===================================================== */
+
+        document
+            .querySelectorAll(
+                ".primary, .secondary"
+            )
+            .forEach(button => {
+                button.addEventListener(
+                    "click",
+                    event => {
+                        const rect =
+                            button.getBoundingClientRect();
+
+                        const ripple =
+                            document.createElement(
+                                "span"
+                            );
+
+                        ripple.className =
+                            "ripple";
+
+                        ripple.style.left =
+                            `${
+                                event.clientX -
+                                rect.left
+                            }px`;
+
+                        ripple.style.top =
+                            `${
+                                event.clientY -
+                                rect.top
+                            }px`;
+
+                        button.style.position =
+                            "relative";
+
+                        button.style.overflow =
+                            "hidden";
+
+                        button.appendChild(
+                            ripple
+                        );
+
+                        window.setTimeout(() => {
+                            ripple.remove();
+                        }, 600);
+                    }
+                );
+            });
+
+        /* =====================================================
+           SCROLL REVEALS
+        ===================================================== */
+
+        const revealItems =
+            document.querySelectorAll(
+                ".card, .footer"
+            );
+
+        if (
+            "IntersectionObserver" in
+            window
+        ) {
+            const observer =
+                new IntersectionObserver(
+                    entries => {
+                        entries.forEach(
+                            entry => {
+                                if (
+                                    entry.isIntersecting
+                                ) {
+                                    entry.target.classList.add(
+                                        "reveal",
+                                        "revealed"
+                                    );
+
+                                    observer.unobserve(
+                                        entry.target
+                                    );
+                                }
+                            }
+                        );
+                    },
+                    {
+                        threshold: 0.08
+                    }
+                );
+
+            revealItems.forEach(
+                item => {
+                    item.classList.add(
+                        "reveal"
+                    );
+
+                    observer.observe(
+                        item
+                    );
+                }
+            );
+        } else {
+            revealItems.forEach(
+                item => {
+                    item.classList.add(
+                        "revealed"
+                    );
+                }
+            );
+        }
+
+        /* =====================================================
+           RESIZE
+        ===================================================== */
+
+        window.addEventListener(
+            "resize",
+            () => {
+                setSliderPosition(
+                    activeIndex,
+                    {
+                        instant: true
+                    }
+                );
+            }
+        );
+
+        /* =====================================================
+           PAGE SHOW / BACK BUTTON
+        ===================================================== */
 
         window.addEventListener(
             "pageshow",
             () => {
-                applyTheme(savedTheme());
+                applyTheme(
+                    isLightTheme()
+                );
 
-                setSlider(
-                    findCurrentIndex(),
-                    true
+                activeIndex =
+                    getCurrentIndex();
+
+                setSliderPosition(
+                    activeIndex,
+                    {
+                        instant: true
+                    }
                 );
             }
         );
