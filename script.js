@@ -1,130 +1,81 @@
 (() => {
     "use strict";
 
-    const THEME_KEY = "shard-theme";
+    document.addEventListener("DOMContentLoaded", () => {
+        const body = document.body;
 
-    const navPages =
-        document.querySelector(".nav-pages");
+        const pageNav = document.getElementById("pageNav");
+        const slider = document.getElementById("navSlider");
+        const themeToggle = document.getElementById("themeToggle");
 
-    const navIndicator =
-        document.querySelector(".nav-indicator");
+        const links = pageNav
+            ? [...pageNav.querySelectorAll("a[data-page]")]
+            : [];
 
-    const navLinks = [
-        ...document.querySelectorAll(
-            ".nav-pages a"
-        )
-    ];
+        /* =========================================
+           THEME
+        ========================================= */
 
-    const themeButton =
-        document.querySelector(
-            ".theme-button"
-        );
+        const THEME_KEY = "shard-theme";
 
+        function savedTheme() {
+            return localStorage.getItem(THEME_KEY) === "light";
+        }
 
-    /* =========================================
-       THEME
-    ========================================= */
+        function applyTheme(isLight) {
+            body.classList.toggle("light", isLight);
 
-    function getTheme() {
-
-        try {
-
-            const saved =
-                localStorage.getItem(
-                    THEME_KEY
-                );
-
-            if (
-                saved === "light" ||
-                saved === "dark"
-            ) {
-                return saved;
-            }
-
-        } catch {}
-
-        return "dark";
-    }
-
-
-    function applyTheme(theme) {
-
-        document.body.classList.toggle(
-            "light",
-            theme === "light"
-        );
-    }
-
-
-    applyTheme(
-        getTheme()
-    );
-
-
-    function switchTheme(event) {
-
-        const current =
-            document.body.classList.contains(
-                "light"
-            )
-                ? "light"
-                : "dark";
-
-        const next =
-            current === "light"
-                ? "dark"
-                : "light";
-
-
-        try {
             localStorage.setItem(
                 THEME_KEY,
-                next
+                isLight ? "light" : "dark"
             );
-        } catch {}
+        }
 
+        applyTheme(savedTheme());
 
-        const x =
-            event?.clientX ??
-            window.innerWidth / 2;
+        function switchTheme(event) {
+            if (!themeToggle) return;
 
-        const y =
-            event?.clientY ??
-            window.innerHeight / 2;
+            const goingLight =
+                !body.classList.contains("light");
 
+            const rect =
+                themeToggle.getBoundingClientRect();
 
-        const overlay =
-            document.createElement(
-                "div"
+            const x =
+                event?.clientX ??
+                rect.left + rect.width / 2;
+
+            const y =
+                event?.clientY ??
+                rect.top + rect.height / 2;
+
+            const overlay =
+                document.createElement("div");
+
+            overlay.className =
+                "theme-transition";
+
+            overlay.style.setProperty(
+                "--transition-x",
+                `${x}px`
             );
 
-        overlay.className =
-            "theme-transition";
+            overlay.style.setProperty(
+                "--transition-y",
+                `${y}px`
+            );
 
-        overlay.classList.toggle(
-            "light",
-            next === "light"
-        );
+            overlay.style.setProperty(
+                "--transition-color",
+                goingLight
+                    ? "#f3f3f5"
+                    : "#050506"
+            );
 
-        overlay.style.setProperty(
-            "--theme-x",
-            `${x}px`
-        );
+            body.appendChild(overlay);
 
-        overlay.style.setProperty(
-            "--theme-y",
-            `${y}px`
-        );
-
-
-        document.body.appendChild(
-            overlay
-        );
-
-
-        if (themeButton) {
-
-            themeButton.animate(
+            themeToggle.animate(
                 [
                     {
                         transform:
@@ -132,11 +83,11 @@
                     },
                     {
                         transform:
-                            "scale(.8) rotate(-12deg)"
+                            "scale(.82) rotate(-10deg)"
                     },
                     {
                         transform:
-                            "scale(1.06) rotate(12deg)"
+                            "scale(1.08) rotate(7deg)"
                     },
                     {
                         transform:
@@ -146,918 +97,471 @@
                 {
                     duration: 560,
                     easing:
-                        "cubic-bezier(.16,1.28,.34,1)"
+                        "cubic-bezier(.22,1,.36,1)"
                 }
             );
-        }
-
-
-        requestAnimationFrame(() => {
 
             requestAnimationFrame(() => {
+                applyTheme(goingLight);
 
-                overlay.classList.add(
-                    "animating"
-                );
-
+                requestAnimationFrame(() => {
+                    overlay.classList.add("active");
+                });
             });
-        });
 
+            window.setTimeout(() => {
+                overlay.remove();
+            }, 850);
+        }
 
-        setTimeout(() => {
-
-            applyTheme(
-                next
+        if (themeToggle) {
+            themeToggle.addEventListener(
+                "click",
+                switchTheme
             );
+        }
 
-        }, 250);
+        /* =========================================
+           PAGE DETECTION
+        ========================================= */
 
+        function currentPage() {
+            const pathname =
+                window.location.pathname;
 
-        setTimeout(() => {
+            let page =
+                pathname
+                    .split("/")
+                    .pop()
+                    .toLowerCase();
 
-            overlay.remove();
-
-        }, 850);
-    }
-
-
-    if (themeButton) {
-
-        themeButton.addEventListener(
-            "pointerup",
-            event => {
-
-                event.preventDefault();
-                event.stopPropagation();
-
-                switchTheme(
-                    event
-                );
+            if (!page) {
+                page = "index.html";
             }
-        );
-    }
 
+            return page;
+        }
 
-    /* =========================================
-       PAGE DETECTION
-    ========================================= */
+        function findCurrentIndex() {
+            const page = currentPage();
 
-    function currentPage() {
+            const index =
+                links.findIndex(link => {
+                    const linkPage =
+                        link
+                            .getAttribute("data-page")
+                            ?.toLowerCase();
 
-        let path =
-            window.location.pathname;
+                    return linkPage === page;
+                });
 
-        path =
-            path
-                .split("?")[0]
-                .split("#")[0];
+            return index >= 0 ? index : 0;
+        }
 
-        if (
-            !path ||
-            path === "/" ||
-            path.endsWith("/")
+        /* =========================================
+           SLIDER
+        ========================================= */
+
+        let activeIndex =
+            findCurrentIndex();
+
+        function setSlider(
+            index,
+            instant = false
         ) {
-            return "index.html";
-        }
-
-        return (
-            path
-                .split("/")
-                .filter(Boolean)
-                .pop()
-                .toLowerCase()
-        ) || "index.html";
-    }
-
-
-    function normalizeHref(
-        href
-    ) {
-
-        if (!href) {
-            return "";
-        }
-
-        if (
-            href.startsWith(
-                "http://"
-            ) ||
-            href.startsWith(
-                "https://"
-            ) ||
-            href.startsWith(
-                "//"
-            ) ||
-            href.startsWith(
-                "#"
-            )
-        ) {
-            return href;
-        }
-
-        href =
-            href
-                .split("?")[0]
-                .split("#")[0];
-
-        if (
-            href === "" ||
-            href === "/"
-        ) {
-            return "index.html";
-        }
-
-        return (
-            href
-                .split("/")
-                .filter(Boolean)
-                .pop()
-                .toLowerCase()
-        );
-    }
-
-
-    function getCurrentLink() {
-
-        const page =
-            currentPage();
-
-        return (
-            navLinks.find(
-                link =>
-                    normalizeHref(
-                        link.getAttribute(
-                            "href"
-                        )
-                    ) === page
-            )
-            || navLinks[0]
-        );
-    }
-
-
-    /* =========================================
-       IOS SPRING SLIDER
-    ========================================= */
-
-    let activeLink =
-        getCurrentLink();
-
-    let activeIndex =
-        Math.max(
-            0,
-            navLinks.indexOf(
-                activeLink
-            )
-        );
-
-
-    function setIndex(
-        index,
-        spring = true
-    ) {
-
-        if (
-            !navPages ||
-            !navIndicator
-        ) {
-            return;
-        }
-
-
-        activeIndex =
-            Math.max(
-                0,
-                Math.min(
-                    index,
-                    navLinks.length - 1
-                )
-            );
-
-
-        navPages.style.setProperty(
-            "--nav-index",
-            activeIndex
-        );
-
-        navPages.style.setProperty(
-            "--drag-offset",
-            "0px"
-        );
-
-        navPages.style.setProperty(
-            "--indicator-scale-x",
-            "1"
-        );
-
-        navPages.style.setProperty(
-            "--indicator-scale-y",
-            "1"
-        );
-
-
-        if (!spring) {
-            navIndicator.style.transition =
-                "none";
-
-            navIndicator.offsetWidth;
-
-            requestAnimationFrame(() => {
-
-                navIndicator.style.transition =
-                    "";
-            });
-        }
-    }
-
-
-    function setActive(
-        link,
-        spring = true
-    ) {
-
-        if (!link) {
-            return;
-        }
-
-        navLinks.forEach(
-            item => {
-
-                item.classList.toggle(
-                    "active",
-                    item === link
-                );
-            }
-        );
-
-        activeLink =
-            link;
-
-        setIndex(
-            navLinks.indexOf(
-                link
-            ),
-            spring
-        );
-    }
-
-
-    setActive(
-        activeLink,
-        false
-    );
-
-
-    /* =========================================
-       DRAGGING
-    ========================================= */
-
-    let dragging =
-        false;
-
-    let pointerId =
-        null;
-
-    let startX =
-        0;
-
-    let moved =
-        false;
-
-    let dragIndex =
-        activeIndex;
-
-
-    function getNavBounds() {
-
-        if (!navPages) {
-            return null;
-        }
-
-        const rect =
-            navPages.getBoundingClientRect();
-
-        const padding =
-            window.innerWidth <= 600
-                ? 4
-                : 5;
-
-        const width =
-            rect.width -
-            padding * 2;
-
-        const cellWidth =
-            width /
-            navLinks.length;
-
-        return {
-            rect,
-            padding,
-            width,
-            cellWidth
-        };
-    }
-
-
-    function pointerToIndex(
-        x
-    ) {
-
-        const bounds =
-            getNavBounds();
-
-        if (!bounds) {
-            return 0;
-        }
-
-        let position =
-            x -
-            bounds.rect.left -
-            bounds.padding;
-
-        position =
-            Math.max(
-                0,
-                Math.min(
-                    position,
-                    bounds.width -
-                    0.01
-                )
-            );
-
-        return Math.max(
-            0,
-            Math.min(
-                Math.floor(
-                    position /
-                    bounds.cellWidth
-                ),
-                navLinks.length - 1
-            )
-        );
-    }
-
-
-    function updateDrag(
-        x
-    ) {
-
-        const bounds =
-            getNavBounds();
-
-        if (!bounds || !navIndicator) {
-            return;
-        }
-
-
-        /*
-            Work in the exact same grid
-            used by the three links.
-        */
-
-        const position =
-            x -
-            bounds.rect.left -
-            bounds.padding;
-
-        const selectedIndex =
-            pointerToIndex(
-                x
-            );
-
-        dragIndex =
-            selectedIndex;
-
-
-        /*
-            Position continuously inside
-            the selected cell.
-        */
-
-        let cellStart =
-            selectedIndex *
-            bounds.cellWidth;
-
-        let cellCenter =
-            cellStart +
-            bounds.cellWidth / 2;
-
-        let pointerInCell =
-            position -
-            cellStart;
-
-        let offset =
-            pointerInCell -
-            bounds.cellWidth / 2;
-
-
-        /*
-            Limit the elastic movement.
-        */
-
-        offset =
-            Math.max(
-                -bounds.cellWidth * .22,
-                Math.min(
-                    offset,
-                    bounds.cellWidth * .22
-                )
-            );
-
-
-        navPages.style.setProperty(
-            "--nav-index",
-            selectedIndex
-        );
-
-        navPages.style.setProperty(
-            "--drag-offset",
-            `${offset}px`
-        );
-
-        navPages.style.setProperty(
-            "--indicator-scale-x",
-            String(
-                1 +
-                Math.min(
-                    .035,
-                    Math.abs(offset) /
-                    bounds.cellWidth *
-                    .055
-                )
-            )
-        );
-
-        navPages.style.setProperty(
-            "--indicator-scale-y",
-            ".91"
-        );
-
-
-        navLinks.forEach(
-            (link, index) => {
-
-                link.classList.toggle(
-                    "active",
-                    index ===
-                        selectedIndex
-                );
-            }
-        );
-    }
-
-
-    if (navPages) {
-
-        navPages.addEventListener(
-            "pointerdown",
-            event => {
-
-                if (
-                    event.pointerType ===
-                        "mouse" &&
-                    event.button !== 0
-                ) {
-                    return;
-                }
-
-
-                dragging =
-                    true;
-
-                moved =
-                    false;
-
-                pointerId =
-                    event.pointerId;
-
-                startX =
-                    event.clientX;
-
-                dragIndex =
-                    pointerToIndex(
-                        event.clientX
-                    );
-
-
-                navPages.classList.add(
-                    "dragging"
-                );
-
-
-                navPages.setPointerCapture?.(
-                    event.pointerId
-                );
-
-
-                updateDrag(
-                    event.clientX
-                );
-            }
-        );
-
-
-        navPages.addEventListener(
-            "pointermove",
-            event => {
-
-                if (
-                    !dragging ||
-                    event.pointerId !==
-                        pointerId
-                ) {
-                    return;
-                }
-
-                if (
-                    Math.abs(
-                        event.clientX -
-                        startX
-                    ) > 6
-                ) {
-                    moved =
-                        true;
-                }
-
-                updateDrag(
-                    event.clientX
-                );
-            }
-        );
-
-
-        function finishDrag(
-            event
-        ) {
-
-            if (
-                !dragging ||
-                event.pointerId !==
-                    pointerId
-            ) {
+            if (!slider || !pageNav) {
                 return;
             }
 
-
-            dragging =
-                false;
-
-            navPages.classList.remove(
-                "dragging"
+            activeIndex = Math.max(
+                0,
+                Math.min(
+                    index,
+                    links.length - 1
+                )
             );
 
+            if (instant) {
+                slider.style.transition =
+                    "none";
+            } else {
+                slider.style.transition = "";
+            }
 
-            navPages.releasePointerCapture?.(
-                event.pointerId
+            pageNav.style.setProperty(
+                "--slider-position",
+                activeIndex
             );
 
-
-            pointerId =
-                null;
-
-
-            const selected =
-                navLinks[
-                    Math.max(
-                        0,
-                        Math.min(
-                            dragIndex,
-                            navLinks.length - 1
-                        )
-                    )
-                ];
-
-
-            navPages.style.setProperty(
-                "--drag-offset",
+            pageNav.style.setProperty(
+                "--drag-x",
                 "0px"
             );
 
-            navPages.style.setProperty(
-                "--indicator-scale-x",
+            pageNav.style.setProperty(
+                "--slider-scale",
                 "1"
             );
 
-            navPages.style.setProperty(
-                "--indicator-scale-y",
-                "1"
-            );
-
-
-            setActive(
-                selected,
-                true
-            );
-
-
-            if (
-                moved &&
-                selected
-            ) {
-
-                const href =
-                    selected.getAttribute(
-                        "href"
+            links.forEach(
+                (link, index) => {
+                    link.classList.toggle(
+                        "active",
+                        index === activeIndex
                     );
-
-                if (
-                    href &&
-                    normalizeHref(
-                        href
-                    ) !==
-                        currentPage()
-                ) {
-
-                    /*
-                        Navigate without fading the
-                        current page to black.
-                    */
-
-                    setTimeout(() => {
-
-                        window.location.href =
-                            href;
-
-                    }, 260);
                 }
+            );
+
+            if (instant) {
+                requestAnimationFrame(() => {
+                    slider.style.transition =
+                        "";
+                });
+            }
+        }
+
+        setSlider(
+            activeIndex,
+            true
+        );
+
+        /* =========================================
+           TOUCH DRAG
+        ========================================= */
+
+        let dragging = false;
+        let pointerId = null;
+        let startX = 0;
+        let startIndex = 0;
+        let latestX = 0;
+        let didDrag = false;
+
+        function cellWidth() {
+            if (!pageNav) return 1;
+
+            const rect =
+                pageNav.getBoundingClientRect();
+
+            const computed =
+                getComputedStyle(pageNav);
+
+            const leftPadding =
+                parseFloat(
+                    computed.paddingLeft
+                ) || 0;
+
+            const rightPadding =
+                parseFloat(
+                    computed.paddingRight
+                ) || 0;
+
+            return (
+                rect.width -
+                leftPadding -
+                rightPadding
+            ) / links.length;
+        }
+
+        function clamp(
+            value,
+            min,
+            max
+        ) {
+            return Math.max(
+                min,
+                Math.min(value, max)
+            );
+        }
+
+        function updateDrag(x) {
+            if (!pageNav || !slider) {
+                return;
             }
 
+            latestX = x;
 
-            dragIndex =
-                activeIndex;
+            const dx =
+                x - startX;
 
+            if (Math.abs(dx) > 6) {
+                didDrag = true;
+            }
 
-            setTimeout(() => {
-                moved = false;
-            }, 50);
-        }
+            const width =
+                cellWidth();
 
+            let movement =
+                dx / width;
 
-        navPages.addEventListener(
-            "pointerup",
-            finishDrag
-        );
+            let floatingIndex =
+                startIndex + movement;
 
-        navPages.addEventListener(
-            "pointercancel",
-            finishDrag
-        );
-    }
+            floatingIndex =
+                clamp(
+                    floatingIndex,
+                    -0.18,
+                    links.length - 0.82
+                );
 
+            let visualIndex =
+                Math.round(floatingIndex);
 
-    /* =========================================
-       NORMAL NAVIGATION
-    ========================================= */
+            visualIndex =
+                clamp(
+                    visualIndex,
+                    0,
+                    links.length - 1
+                );
 
-    navLinks.forEach(
-        link => {
+            const nearest =
+                Math.round(
+                    floatingIndex
+                );
 
-            link.addEventListener(
-                "click",
-                event => {
+            const base =
+                clamp(
+                    nearest,
+                    0,
+                    links.length - 1
+                );
 
-                    if (moved) {
+            const remainder =
+                dx -
+                (base - startIndex) * width;
 
-                        event.preventDefault();
+            const maxDrag =
+                width * 0.95;
 
-                        moved =
-                            false;
+            const limited =
+                clamp(
+                    remainder,
+                    -maxDrag,
+                    maxDrag
+                );
 
-                        return;
-                    }
+            pageNav.style.setProperty(
+                "--slider-position",
+                base
+            );
 
+            pageNav.style.setProperty(
+                "--drag-x",
+                `${limited}px`
+            );
 
-                    const href =
-                        link.getAttribute(
-                            "href"
-                        );
+            pageNav.style.setProperty(
+                "--slider-scale",
+                "1.055"
+            );
 
-                    if (!href) {
-                        return;
-                    }
-
-
-                    if (
-                        href.startsWith(
-                            "http://"
-                        ) ||
-                        href.startsWith(
-                            "https://"
-                        ) ||
-                        href.startsWith(
-                            "//"
-                        ) ||
-                        href.startsWith(
-                            "#"
-                        )
-                    ) {
-                        return;
-                    }
-
-
-                    const destination =
-                        normalizeHref(
-                            href
-                        );
-
-
-                    if (
-                        destination ===
-                        currentPage()
-                    ) {
-
-                        event.preventDefault();
-
-                        setActive(
-                            link,
-                            true
-                        );
-
-                        return;
-                    }
-
-
-                    event.preventDefault();
-
-
-                    setActive(
-                        link,
-                        true
+            links.forEach(
+                (link, index) => {
+                    link.classList.toggle(
+                        "active",
+                        index === visualIndex
                     );
-
-
-                    /*
-                        No page-out animation.
-                        The new page's entrance animation
-                        handles the transition cleanly.
-                    */
-
-                    setTimeout(() => {
-
-                        window.location.href =
-                            href;
-
-                    }, 260);
                 }
             );
         }
-    );
 
+        function finishDrag() {
+            if (!dragging) return;
 
-    /* =========================================
-       PAGE SHOW
-    ========================================= */
+            dragging = false;
 
-    window.addEventListener(
-        "pageshow",
-        () => {
+            pageNav.classList.remove(
+                "dragging"
+            );
 
-            const current =
-                getCurrentLink();
+            const width =
+                cellWidth();
 
-            setActive(
-                current,
+            const totalDx =
+                latestX - startX;
+
+            let target =
+                startIndex;
+
+            if (
+                Math.abs(totalDx) >
+                width * 0.2
+            ) {
+                target =
+                    startIndex +
+                    (totalDx > 0 ? 1 : -1);
+            }
+
+            target =
+                clamp(
+                    target,
+                    0,
+                    links.length - 1
+                );
+
+            setSlider(
+                target,
                 false
             );
 
-            applyTheme(
-                getTheme()
+            if (
+                didDrag &&
+                links[target]
+            ) {
+                const href =
+                    links[target].href;
+
+                window.setTimeout(() => {
+                    window.location.href =
+                        href;
+                }, 250);
+            }
+
+            pointerId = null;
+
+            window.setTimeout(() => {
+                didDrag = false;
+            }, 40);
+        }
+
+        if (pageNav) {
+            pageNav.addEventListener(
+                "pointerdown",
+                event => {
+                    if (
+                        event.pointerType ===
+                        "mouse"
+                    ) {
+                        return;
+                    }
+
+                    dragging = true;
+                    didDrag = false;
+
+                    pointerId =
+                        event.pointerId;
+
+                    startX =
+                        event.clientX;
+
+                    latestX =
+                        event.clientX;
+
+                    startIndex =
+                        activeIndex;
+
+                    pageNav.classList.add(
+                        "dragging"
+                    );
+
+                    pageNav.setPointerCapture(
+                        pointerId
+                    );
+                }
+            );
+
+            pageNav.addEventListener(
+                "pointermove",
+                event => {
+                    if (
+                        !dragging ||
+                        event.pointerId !==
+                            pointerId
+                    ) {
+                        return;
+                    }
+
+                    updateDrag(
+                        event.clientX
+                    );
+                }
+            );
+
+            pageNav.addEventListener(
+                "pointerup",
+                event => {
+                    if (
+                        event.pointerId !==
+                        pointerId
+                    ) {
+                        return;
+                    }
+
+                    finishDrag();
+                }
+            );
+
+            pageNav.addEventListener(
+                "pointercancel",
+                finishDrag
             );
         }
-    );
 
+        /* =========================================
+           CLICK NAVIGATION
+        ========================================= */
 
-    /* =========================================
-       RESIZE
-    ========================================= */
+        links.forEach((link, index) => {
+            link.addEventListener(
+                "click",
+                event => {
+                    if (didDrag) {
+                        event.preventDefault();
+                        return;
+                    }
 
-    let resizeTimer =
-        null;
+                    const destination =
+                        link.href;
 
-    window.addEventListener(
-        "resize",
-        () => {
+                    if (
+                        index === activeIndex
+                    ) {
+                        event.preventDefault();
+                        return;
+                    }
 
-            clearTimeout(
-                resizeTimer
-            );
+                    event.preventDefault();
 
-            resizeTimer =
-                setTimeout(() => {
-
-                    setActive(
-                        getCurrentLink(),
+                    setSlider(
+                        index,
                         false
                     );
 
-                }, 80);
-        }
-    );
-
-
-    /* =========================================
-       SCROLL REVEAL
-    ========================================= */
-
-    const revealElements =
-        document.querySelectorAll(
-            ".card, .footer"
-        );
-
-    const observer =
-        new IntersectionObserver(
-            entries => {
-
-                entries.forEach(
-                    entry => {
-
-                        if (
-                            !entry.isIntersecting
-                        ) {
-                            return;
-                        }
-
-                        entry.target.classList.add(
-                            "visible"
-                        );
-
-                        observer.unobserve(
-                            entry.target
-                        );
-                    }
-                );
-            },
-            {
-                threshold: .12,
-                rootMargin:
-                    "0px 0px -60px 0px"
-            }
-        );
-
-
-    revealElements.forEach(
-        element => {
-
-            observer.observe(
-                element
+                    window.setTimeout(() => {
+                        window.location.href =
+                            destination;
+                    }, 250);
+                }
             );
-        }
-    );
+        });
 
+        /* =========================================
+           RESIZE
+        ========================================= */
 
-    /* =========================================
-       GLASS TOUCH / POINTER RESPONSE
-    ========================================= */
-
-    document
-        .querySelectorAll(
-            ".nav-pages, .theme-pill"
-        )
-        .forEach(
-            element => {
-
-                element.addEventListener(
-                    "pointermove",
-                    event => {
-
-                        if (
-                            event.pointerType ===
-                                "touch"
-                        ) {
-                            return;
-                        }
-
-                        const rect =
-                            element.getBoundingClientRect();
-
-                        const x =
-                            (
-                                event.clientX -
-                                rect.left
-                            ) /
-                            rect.width *
-                            100;
-
-                        const y =
-                            (
-                                event.clientY -
-                                rect.top
-                            ) /
-                            rect.height *
-                            100;
-
-                        element.style.setProperty(
-                            "--glass-x",
-                            `${x}%`
-                        );
-
-                        element.style.setProperty(
-                            "--glass-y",
-                            `${y}%`
-                        );
-                    }
+        window.addEventListener(
+            "resize",
+            () => {
+                setSlider(
+                    activeIndex,
+                    true
                 );
             }
         );
 
+        /* =========================================
+           BFCACHE / PAGE RETURN
+        ========================================= */
+
+        window.addEventListener(
+            "pageshow",
+            () => {
+                applyTheme(savedTheme());
+
+                setSlider(
+                    findCurrentIndex(),
+                    true
+                );
+            }
+        );
+    });
 })();
