@@ -9,44 +9,38 @@
 <body class="">
 
 <div class="container">
-<nav>
-    <span class="shard-label">Shard</span>
+<nav class="floating-nav">
+    <div class="brand">Shard</div>
 
-    <div class="nav-pages">
-        <span class="nav-indicator"></span>
+    <div class="page-nav" id="pageNav">
+        <span class="nav-slider" id="navSlider"></span>
 
-        <a href="index.html">Home</a>
-        <a href="privacy.html">Privacy</a>
-        <a href="terms.html">Terms</a>
+        <a href="index.html" data-page="index.html">Home</a>
+        <a href="privacy.html" data-page="privacy.html">Privacy</a>
+        <a href="terms.html" data-page="terms.html">Terms</a>
     </div>
 
-    <div class="theme-pill">
-        <button
-            class="theme-button"
-            type="button"
-            aria-label="Switch theme"
-        >
-            <span class="theme-icon theme-icon-moon">
-                <svg viewBox="0 0 24 24">
-                    <path d="M20.4 15.2A8.5 8.5 0 0 1 8.8 3.6 8.5 8.5 0 1 0 20.4 15.2Z"/>
-                </svg>
-            </span>
+    <button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle theme">
+        <span class="theme-icon moon">
+            <svg viewBox="0 0 24 24">
+                <path d="M20 15.2A8.5 8.5 0 0 1 8.8 4 8.5 8.5 0 1 0 20 15.2Z"/>
+            </svg>
+        </span>
 
-            <span class="theme-icon theme-icon-sun">
-                <svg viewBox="0 0 24 24">
-                    <circle cx="12" cy="12" r="3.4"/>
-                    <path d="M12 2v2"/>
-                    <path d="M12 20v2"/>
-                    <path d="m4.93 4.93 1.41 1.41"/>
-                    <path d="m17.66 17.66 1.41 1.41"/>
-                    <path d="M2 12h2"/>
-                    <path d="M20 12h2"/>
-                    <path d="m4.93 19.07 1.41-1.41"/>
-                    <path d="m17.66 6.34 1.41-1.41"/>
-                </svg>
-            </span>
-        </button>
-    </div>
+        <span class="theme-icon sun">
+            <svg viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="3.5"/>
+                <path d="M12 2V4"/>
+                <path d="M12 20V22"/>
+                <path d="M4.93 4.93L6.34 6.34"/>
+                <path d="M17.66 17.66L19.07 19.07"/>
+                <path d="M2 12H4"/>
+                <path d="M20 12H22"/>
+                <path d="M4.93 19.07L6.34 17.66"/>
+                <path d="M17.66 6.34L19.07 4.93"/>
+            </svg>
+        </span>
+    </button>
 </nav>
 
 <section class="hero">
