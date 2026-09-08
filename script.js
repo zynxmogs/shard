@@ -17,13 +17,13 @@
             ? [...pageNav.querySelectorAll("a[data-page]")]
             : [];
 
+        const THEME_KEY = "shard-theme";
+
         /* =====================================================
            THEME
         ===================================================== */
 
-        const THEME_KEY = "shard-theme";
-
-        function isLightTheme() {
+        function isLight() {
             return (
                 localStorage.getItem(THEME_KEY) ===
                 "light"
@@ -42,15 +42,24 @@
             );
         }
 
-        applyTheme(isLightTheme());
+        applyTheme(isLight());
 
-        function switchTheme() {
-            if (!themeToggle) {
-                return;
-            }
+        function switchTheme(event) {
+            if (!themeToggle) return;
 
             const nextLight =
                 !body.classList.contains("light");
+
+            const rect =
+                themeToggle.getBoundingClientRect();
+
+            const x =
+                event?.clientX ??
+                rect.left + rect.width / 2;
+
+            const y =
+                event?.clientY ??
+                rect.top + rect.height / 2;
 
             const flash =
                 document.createElement("div");
@@ -59,10 +68,20 @@
                 "theme-flash";
 
             flash.style.setProperty(
-                "--flash-color",
+                "--theme-x",
+                `${x}px`
+            );
+
+            flash.style.setProperty(
+                "--theme-y",
+                `${y}px`
+            );
+
+            flash.style.setProperty(
+                "--theme-color",
                 nextLight
-                    ? "#f4f4f6"
-                    : "#080708"
+                    ? "#202023"
+                    : "#09090b"
             );
 
             body.appendChild(flash);
@@ -71,7 +90,7 @@
                 [
                     {
                         transform:
-                            "scale(1) rotate(0deg)"
+                            "scale(1) rotate(0)"
                     },
                     {
                         transform:
@@ -79,32 +98,27 @@
                     },
                     {
                         transform:
-                            "scale(1.06) rotate(5deg)"
+                            "scale(1.07) rotate(6deg)"
                     },
                     {
                         transform:
-                            "scale(1) rotate(0deg)"
+                            "scale(1) rotate(0)"
                     }
                 ],
                 {
-                    duration: 430,
+                    duration: 440,
                     easing:
                         "cubic-bezier(.22,1,.36,1)"
                 }
             );
 
-            /*
-             * Change the actual theme shortly after
-             * the transition begins. No huge circle,
-             * no black screen and no clipped page.
-             */
             window.setTimeout(() => {
                 applyTheme(nextLight);
-            }, 70);
+            }, 65);
 
             window.setTimeout(() => {
                 flash.remove();
-            }, 470);
+            }, 460);
         }
 
         if (themeToggle) {
@@ -115,7 +129,7 @@
         }
 
         /* =====================================================
-           CURRENT PAGE
+           PAGE DETECTION
         ===================================================== */
 
         function getCurrentPage() {
@@ -136,7 +150,7 @@
             const current =
                 getCurrentPage();
 
-            const found =
+            const index =
                 links.findIndex(link => {
                     return (
                         (
@@ -147,8 +161,8 @@
                     );
                 });
 
-            return found >= 0
-                ? found
+            return index >= 0
+                ? index
                 : 0;
         }
 
@@ -159,18 +173,13 @@
         let activeIndex =
             getCurrentIndex();
 
-        function getSliderGeometry() {
-            if (!pageNav) {
+        function getGeometry() {
+            if (!pageNav || !links.length) {
                 return null;
             }
 
-            const navRect =
-                pageNav.getBoundingClientRect();
-
             const style =
-                window.getComputedStyle(
-                    pageNav
-                );
+                getComputedStyle(pageNav);
 
             const paddingLeft =
                 parseFloat(
@@ -183,7 +192,7 @@
                 ) || 0;
 
             const innerWidth =
-                navRect.width -
+                pageNav.clientWidth -
                 paddingLeft -
                 paddingRight;
 
@@ -193,106 +202,13 @@
 
             return {
                 cellWidth,
-                left: paddingLeft,
-                top:
+                paddingLeft,
+                paddingTop:
                     parseFloat(
                         style.paddingTop
                     ) || 0
             };
         }
-
-        /*
-         * The slider is positioned using PIXELS, not
-         * percentage transforms. This prevents it from
-         * escaping the pill on different screen widths.
-         */
-
-        function setSliderPosition(
-            index,
-            options = {}
-        ) {
-            if (!pageNav || !slider) {
-                return;
-            }
-
-            const {
-                instant = false,
-                dragX = 0,
-                scale = 1
-            } = options;
-
-            const geometry =
-                getSliderGeometry();
-
-            if (!geometry) {
-                return;
-            }
-
-            activeIndex =
-                Math.max(
-                    0,
-                    Math.min(
-                        index,
-                        links.length - 1
-                    )
-                );
-
-            const x =
-                geometry.cellWidth *
-                activeIndex;
-
-            slider.style.width =
-                `${geometry.cellWidth}px`;
-
-            slider.style.height =
-                `${Math.max(
-                    0,
-                    pageNav.clientHeight -
-                        geometry.top * 2
-                )}px`;
-
-            slider.style.transform =
-                `translate3d(${x + dragX}px, 0, 0) scaleX(${scale})`;
-
-            slider.style.transition =
-                instant
-                    ? "none"
-                    : "";
-
-            links.forEach(
-                (link, i) => {
-                    link.classList.toggle(
-                        "active",
-                        i === activeIndex
-                    );
-                }
-            );
-
-            if (instant) {
-                requestAnimationFrame(() => {
-                    slider.style.transition =
-                        "";
-                });
-            }
-        }
-
-        setSliderPosition(
-            activeIndex,
-            { instant: true }
-        );
-
-        /* =====================================================
-           DRAG
-        ===================================================== */
-
-        let dragging = false;
-        let pointerId = null;
-
-        let dragStartX = 0;
-        let dragLatestX = 0;
-
-        let dragStartIndex = 0;
-        let dragged = false;
 
         function clamp(
             value,
@@ -305,49 +221,170 @@
             );
         }
 
-        function beginDrag(event) {
+        function updateLinks(index) {
+            links.forEach(
+                (link, i) => {
+                    link.classList.toggle(
+                        "active",
+                        i === index
+                    );
+                }
+            );
+        }
+
+        function positionSlider(
+            index,
+            instant = false
+        ) {
             if (
                 !pageNav ||
-                links.length === 0
+                !slider ||
+                !links.length
             ) {
                 return;
             }
 
-            /*
-             * Mouse clicks should behave like normal
-             * navigation. Touch and pen get dragging.
-             */
+            const geometry =
+                getGeometry();
+
+            if (!geometry) return;
+
+            activeIndex =
+                clamp(
+                    index,
+                    0,
+                    links.length - 1
+                );
+
+            slider.style.width =
+                `${geometry.cellWidth}px`;
+
+            slider.style.height =
+                `${pageNav.clientHeight - 10}px`;
+
+            slider.style.left =
+                `${geometry.paddingLeft}px`;
+
+            slider.style.top =
+                `${geometry.paddingTop}px`;
+
+            slider.style.setProperty(
+                "--slider-x",
+                `${
+                    geometry.cellWidth *
+                    activeIndex
+                }px`
+            );
+
+            slider.style.setProperty(
+                "--slider-scale-x",
+                "1"
+            );
+
+            slider.style.setProperty(
+                "--slider-scale-y",
+                "1"
+            );
+
+            slider.style.setProperty(
+                "--slider-tilt",
+                "0deg"
+            );
+
+            slider.style.setProperty(
+                "--gloss-x",
+                "50%"
+            );
+
+            slider.style.transition =
+                instant
+                    ? "none"
+                    : "";
+
+            updateLinks(activeIndex);
+
+            if (instant) {
+                requestAnimationFrame(() => {
+                    slider.style.transition =
+                        "";
+                });
+            }
+        }
+
+        positionSlider(
+            activeIndex,
+            true
+        );
+
+        /* =====================================================
+           DRAG STATE
+        ===================================================== */
+
+        let dragging = false;
+        let pointerId = null;
+
+        let startX = 0;
+        let latestX = 0;
+
+        let startIndex = 0;
+
+        let didDrag = false;
+        let lastMoveTime = 0;
+        let lastMoveX = 0;
+        let velocity = 0;
+
+        /* =====================================================
+           DRAG START
+        ===================================================== */
+
+        function onPointerDown(event) {
             if (
+                !pageNav ||
                 event.pointerType === "mouse"
             ) {
                 return;
             }
 
             dragging = true;
-            dragged = false;
+            didDrag = false;
 
             pointerId =
                 event.pointerId;
 
-            dragStartX =
+            startX =
                 event.clientX;
 
-            dragLatestX =
+            latestX =
                 event.clientX;
 
-            dragStartIndex =
+            startIndex =
                 activeIndex;
+
+            lastMoveX =
+                event.clientX;
+
+            lastMoveTime =
+                performance.now();
+
+            velocity = 0;
 
             pageNav.classList.add(
                 "dragging"
             );
+
+            slider.style.transition =
+                "none";
 
             pageNav.setPointerCapture(
                 pointerId
             );
         }
 
-        function moveDrag(event) {
+        /* =====================================================
+           DRAG MOVE
+        ===================================================== */
+
+        function onPointerMove(event) {
             if (
                 !dragging ||
                 event.pointerId !== pointerId
@@ -355,127 +392,197 @@
                 return;
             }
 
-            dragLatestX =
+            const now =
+                performance.now();
+
+            const x =
                 event.clientX;
 
+            latestX = x;
+
             const dx =
-                dragLatestX -
-                dragStartX;
+                x - startX;
 
             if (
                 Math.abs(dx) > 6
             ) {
-                dragged = true;
+                didDrag = true;
             }
+
+            const dt =
+                Math.max(
+                    1,
+                    now - lastMoveTime
+                );
+
+            velocity =
+                (x - lastMoveX) /
+                dt;
+
+            lastMoveX = x;
+            lastMoveTime = now;
 
             const geometry =
-                getSliderGeometry();
+                getGeometry();
 
-            if (!geometry) {
-                return;
-            }
+            if (!geometry) return;
 
             const width =
                 geometry.cellWidth;
 
-            /*
-             * Calculate the exact absolute slider
-             * position rather than adding nested
-             * percentage transforms.
-             */
             const rawPosition =
-                dragStartIndex * width +
+                startIndex * width +
                 dx;
-
-            const minPosition = 0;
 
             const maxPosition =
                 width *
                 (links.length - 1);
 
+            let position =
+                rawPosition;
+
             /*
-             * Small resistance when pulling past
-             * either edge.
+             * Elastic resistance at the
+             * beginning and end.
              */
-            let position;
+            if (position < 0) {
+                position *= 0.24;
+            }
 
             if (
-                rawPosition < minPosition
-            ) {
-                position =
-                    minPosition +
-                    (
-                        rawPosition -
-                        minPosition
-                    ) *
-                    0.25;
-            } else if (
-                rawPosition >
+                position >
                 maxPosition
             ) {
                 position =
                     maxPosition +
                     (
-                        rawPosition -
+                        position -
                         maxPosition
                     ) *
-                    0.25;
-            } else {
-                position = rawPosition;
+                    0.24;
             }
 
-            const safePosition =
+            position =
                 clamp(
                     position,
-                    -width * 0.22,
+                    -width * 0.25,
                     maxPosition +
-                        width * 0.22
+                        width * 0.25
                 );
 
-            /*
-             * Keep the visual active state synchronized
-             * while dragging.
-             */
-            let visualIndex =
-                Math.round(
-                    safePosition / width
-                );
-
-            visualIndex =
+            const nearestIndex =
                 clamp(
-                    visualIndex,
+                    Math.round(
+                        position / width
+                    ),
                     0,
                     links.length - 1
                 );
 
-            links.forEach(
-                (link, index) => {
-                    link.classList.toggle(
-                        "active",
-                        index === visualIndex
-                    );
-                }
+            /*
+             * Stronger stretch while dragging.
+             */
+            const velocityStretch =
+                clamp(
+                    Math.abs(velocity) *
+                        0.15,
+                    0,
+                    0.08
+                );
+
+            const dragStretch =
+                clamp(
+                    Math.abs(dx) /
+                        width *
+                        0.045,
+                    0,
+                    0.055
+                );
+
+            const scaleX =
+                1 +
+                velocityStretch +
+                dragStretch;
+
+            const scaleY =
+                1 -
+                clamp(
+                    (scaleX - 1) * 0.7,
+                    0,
+                    0.075
+                );
+
+            /*
+             * Slight tilt gives the slider
+             * a softer liquid-body feel.
+             */
+            const tilt =
+                clamp(
+                    velocity * 0.55,
+                    -3.5,
+                    3.5
+                );
+
+            const gloss =
+                clamp(
+                    50 +
+                    velocity * 7,
+                    15,
+                    85
+                );
+
+            slider.style.width =
+                `${width}px`;
+
+            slider.style.height =
+                `${pageNav.clientHeight - 10}px`;
+
+            slider.style.left =
+                `${geometry.paddingLeft}px`;
+
+            slider.style.top =
+                `${geometry.paddingTop}px`;
+
+            slider.style.setProperty(
+                "--slider-x",
+                `${position}px`
             );
 
-            const scale =
-                Math.abs(dx) > 5
-                    ? 1.035
-                    : 1;
+            slider.style.setProperty(
+                "--slider-scale-x",
+                scaleX
+            );
 
-            slider.style.transition =
-                "none";
+            slider.style.setProperty(
+                "--slider-scale-y",
+                scaleY
+            );
 
-            slider.style.transform =
-                `translate3d(${safePosition}px, 0, 0) scaleX(${scale})`;
+            slider.style.setProperty(
+                "--slider-tilt",
+                `${tilt}deg`
+            );
+
+            slider.style.setProperty(
+                "--gloss-x",
+                `${gloss}%`
+            );
+
+            updateLinks(
+                nearestIndex
+            );
         }
 
-        function endDrag(event) {
+        /* =====================================================
+           DRAG END
+        ===================================================== */
+
+        function onPointerUp(event) {
             if (
                 !dragging ||
                 (
                     event &&
-                    event.pointerId !==
-                        pointerId
+                    event.pointerId !== pointerId
                 )
             ) {
                 return;
@@ -488,7 +595,7 @@
             );
 
             const geometry =
-                getSliderGeometry();
+                getGeometry();
 
             if (!geometry) {
                 pointerId = null;
@@ -496,27 +603,32 @@
             }
 
             const dx =
-                dragLatestX -
-                dragStartX;
+                latestX - startX;
 
             const width =
                 geometry.cellWidth;
 
             let target =
-                dragStartIndex;
+                startIndex;
 
             /*
-             * A moderate swipe changes the tab.
-             * Small movements snap back.
+             * Release momentum counts slightly.
              */
+            const momentum =
+                velocity * 125;
+
+            const projected =
+                dx +
+                momentum;
+
             if (
-                Math.abs(dx) >
-                width * 0.22
+                Math.abs(projected) >
+                width * 0.2
             ) {
                 target =
-                    dragStartIndex +
+                    startIndex +
                     (
-                        dx > 0
+                        projected > 0
                             ? 1
                             : -1
                     );
@@ -524,7 +636,7 @@
                 target =
                     Math.round(
                         (
-                            dragStartIndex *
+                            startIndex *
                                 width +
                             dx
                         ) /
@@ -539,54 +651,86 @@
                     links.length - 1
                 );
 
-            activeIndex = target;
+            /*
+             * Reset all liquid deformation and
+             * let the slider spring into place.
+             */
+            slider.style.transition =
+                "transform 620ms cubic-bezier(.16,1.35,.25,1)";
 
-            setSliderPosition(
-                target,
-                {
-                    instant: false
-                }
+            slider.style.setProperty(
+                "--slider-x",
+                `${
+                    width * target
+                }px`
             );
+
+            slider.style.setProperty(
+                "--slider-scale-x",
+                "1"
+            );
+
+            slider.style.setProperty(
+                "--slider-scale-y",
+                "1"
+            );
+
+            slider.style.setProperty(
+                "--slider-tilt",
+                "0deg"
+            );
+
+            slider.style.setProperty(
+                "--gloss-x",
+                "50%"
+            );
+
+            updateLinks(target);
+
+            const shouldNavigate =
+                didDrag &&
+                target !== startIndex &&
+                links[target];
+
+            activeIndex =
+                target;
 
             pointerId = null;
 
-            if (
-                dragged &&
-                links[target]
-            ) {
+            if (shouldNavigate) {
                 const destination =
                     links[target].href;
 
                 window.setTimeout(() => {
                     window.location.href =
                         destination;
-                }, 250);
+                }, 260);
             }
 
             window.setTimeout(() => {
-                dragged = false;
-            }, 50);
+                didDrag = false;
+            }, 60);
         }
 
         if (pageNav) {
             pageNav.addEventListener(
                 "pointerdown",
-                beginDrag
+                onPointerDown
             );
 
             pageNav.addEventListener(
                 "pointermove",
-                moveDrag
+                onPointerMove
             );
 
             pageNav.addEventListener(
                 "pointerup",
-                endDrag
+                onPointerUp
             );
 
             pageNav.addEventListener(
                 "pointercancel",
-                endDrag
+                onPointerUp
             );
         }
 
@@ -599,11 +743,7 @@
                 link.addEventListener(
                     "click",
                     event => {
-                        /*
-                         * A touch swipe creates a click after
-                         * release in some browsers. Ignore it.
-                         */
-                        if (dragged) {
+                        if (didDrag) {
                             event.preventDefault();
                             return;
                         }
@@ -618,27 +758,63 @@
 
                         event.preventDefault();
 
+                        positionSlider(
+                            index,
+                            false
+                        );
+
+                        activeIndex =
+                            index;
+
                         const destination =
                             link.href;
-
-                        setSliderPosition(
-                            index,
-                            {
-                                instant: false
-                            }
-                        );
 
                         window.setTimeout(() => {
                             window.location.href =
                                 destination;
-                        }, 250);
+                        }, 260);
                     }
                 );
             }
         );
 
         /* =====================================================
-           RIPPLE
+           NAV HOVER GLASS RESPONSE
+        ===================================================== */
+
+        if (pageNav) {
+            pageNav.addEventListener(
+                "pointermove",
+                event => {
+                    if (
+                        dragging ||
+                        event.pointerType !==
+                            "mouse"
+                    ) {
+                        return;
+                    }
+
+                    const rect =
+                        pageNav.getBoundingClientRect();
+
+                    const x =
+                        (
+                            (event.clientX -
+                                rect.left) /
+                            rect.width
+                        ) * 100;
+
+                    pageNav.style.setProperty(
+                        "--mouse-x",
+                        `${x}%`
+                    );
+                },
+                { passive: true }
+            );
+        }
+
+        /* =====================================================
+           BUTTON RIPPLES
         ===================================================== */
 
         document
@@ -742,6 +918,7 @@
             revealItems.forEach(
                 item => {
                     item.classList.add(
+                        "reveal",
                         "revealed"
                     );
                 }
@@ -755,34 +932,30 @@
         window.addEventListener(
             "resize",
             () => {
-                setSliderPosition(
+                positionSlider(
                     activeIndex,
-                    {
-                        instant: true
-                    }
+                    true
                 );
             }
         );
 
         /* =====================================================
-           PAGE SHOW / BACK BUTTON
+           BACK / FORWARD CACHE
         ===================================================== */
 
         window.addEventListener(
             "pageshow",
             () => {
                 applyTheme(
-                    isLightTheme()
+                    isLight()
                 );
 
                 activeIndex =
                     getCurrentIndex();
 
-                setSliderPosition(
+                positionSlider(
                     activeIndex,
-                    {
-                        instant: true
-                    }
+                    true
                 );
             }
         );
